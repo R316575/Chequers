@@ -37,9 +37,8 @@ def handle_join(data):
 @socketio.on('player_click_move')
 def handle_move(data):
     room_code = data['room']
-    player_color = data['player'] # "R" or "W"
+    player_color = data['player'] 
     
-    # The exact grid coordinates sent automatically by the browser click event
     r = data['r']
     c = data['c']
     nr = data['nr']
@@ -47,18 +46,17 @@ def handle_move(data):
     
     current_game = active_games[room_code]
     
-    # 1. Check if it is actually this player's turn
     if current_game.current_turn != player_color:
         emit('error_msg', {'message': "It is not your turn!"}, room=request.sid)
         return
 
-    # 2. Run your existing game logic using the coordinates
-    # Note: Ensure your move_piece method returns (True/False) or handles success cleanly
-    success = current_game.board.move_piece(r, c, nr, nc, player_color)
+    # Pass current_game instance into move_piece execution stack cleanly
+    success, message = current_game.board.move_piece(r, c, nr, nc, player_color, current_game)
     
-    # 3. If the move worked, broadcast the updated board to BOTH players in the room
-    # If your move_piece modifies the board array directly, we grab that updated array:
-    emit('sync_board', {'board': current_game.board.board}, to=room_code)
+    if success:
+        emit('sync_board', {'board': current_game.board.board}, to=room_code)
+    else:
+        emit('error_msg', {'message': message}, room=request.sid)
 
 if __name__ == '__main__':
     socketio.run(app, debug=True, port=8080)
