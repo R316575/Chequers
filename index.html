@@ -1,11 +1,11 @@
-!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <title>Online Multiplayer Chequers</title>
     
-    <!-- Ultra-stable universal connection library -->
-    <script src="https://cloudflare.com" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <!-- We use the pre-packaged script coming directly from your live Render server -->
+    <script src="https://onrender.com"></script>
     
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #1e1e24; color: #fff; text-align: center; padding: 20px; }
@@ -46,7 +46,6 @@
     </div>
 
 <script>
-    // Pointing directly to your server endpoint
     const RENDER_URL = "https://onrender.com"; 
     
     let socket;
@@ -62,10 +61,14 @@
         document.getElementById('conn-status').innerText = "Connecting to backend server...";
 
         try {
-            // Force pure WebSocket connection rules to avoid browser permission errors
+            // Check if the script loaded properly from Render
+            if (typeof io === 'undefined') {
+                document.getElementById('conn-status').innerText = "Server is waking up from standby mode. Please wait 30 seconds and click Join again...";
+                return;
+            }
+
             socket = io(RENDER_URL, {
-                transports: ['websocket', 'polling'],
-                upgrade: true
+                transports: ['websocket', 'polling']
             });
 
             socket.on('connect', () => {
@@ -85,13 +88,9 @@
 
             socket.on('error_message', (data) => { alert("Error: " + data.message); });
             socket.on('game_over', (data) => { alert("Game Over! " + data.message); });
-            
-            socket.on('connect_error', (err) => {
-                document.getElementById('conn-status').innerText = "Server is waking up, please stay on this page...";
-            });
 
         } catch (error) {
-            alert("Connection framework initialization failed.");
+            document.getElementById('conn-status').innerText = "Connection configuration error.";
         }
     }
 
@@ -103,9 +102,9 @@
 
         const columns = "ABCDEFGH";
         const c = columns.indexOf(pos);
-        const r = 8 - parseInt(pos[1]);
+        const r = 8 - parseInt(pos.slice(1));
         const nc = columns.indexOf(newPos);
-        const nr = 8 - parseInt(newPos[1]);
+        const nr = 8 - parseInt(newPos.slice(1));
 
         socket.emit('submit_move', {
             game_code: activeRoom,
