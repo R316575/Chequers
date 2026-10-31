@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <title>Online Multiplayer Chequers</title>
     
-    <!-- We use the pre-packaged script coming directly from your live Render server -->
-    <script src="https://onrender.com"></script>
+    <!-- Ultra-stable fallback connection tool layer -->
+    <script src="https://cloudflare.com"></script>
     
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #1e1e24; color: #fff; text-align: center; padding: 20px; }
@@ -46,7 +46,7 @@
     </div>
 
 <script>
-    const RENDER_URL = "https://onrender.com"; 
+    const RENDER_URL = "https://chequers.onrender.com"; 
     
     let socket;
     let myColor = "R";
@@ -60,38 +60,33 @@
         if(!room) { alert("Please enter a room code!"); return; }
         document.getElementById('conn-status').innerText = "Connecting to backend server...";
 
-        try {
-            // Check if the script loaded properly from Render
-            if (typeof io === 'undefined') {
-                document.getElementById('conn-status').innerText = "Server is waking up from standby mode. Please wait 30 seconds and click Join again...";
-                return;
-            }
+        // Force a robust cross-network websocket configuration
+        socket = io(RENDER_URL, {
+            transports: ['websocket', 'polling'],
+            forceNew: true
+        });
 
-            socket = io(RENDER_URL, {
-                transports: ['websocket', 'polling']
+        socket.on('connect', () => {
+            document.getElementById('setup-panel').style.display = 'none';
+            document.getElementById('game-container').style.display = 'block';
+            socket.emit('join_match', { game_code: activeRoom });
+        });
+
+        socket.on('board_update', (data) => {
+            document.getElementById('turn-indicator').innerText = `Current Turn: ${data.turn} ${data.turn === myColor ? '(YOUR TURN)' : '(Waiting for opponent)'}`;
+            let boardText = "   A B C D E F G H\n";
+            data.board.forEach((row, index) => {
+                boardText += `${8 - index}  ${row.join(' ')}\n`;
             });
+            document.getElementById('board-display').innerText = boardText;
+        });
 
-            socket.on('connect', () => {
-                document.getElementById('setup-panel').style.display = 'none';
-                document.getElementById('game-container').style.display = 'block';
-                socket.emit('join_match', { game_code: activeRoom });
-            });
-
-            socket.on('board_update', (data) => {
-                document.getElementById('turn-indicator').innerText = `Current Turn: ${data.turn} ${data.turn === myColor ? '(YOUR TURN)' : '(Waiting for opponent)'}`;
-                let boardText = "   A B C D E F G H\n";
-                data.board.forEach((row, index) => {
-                    boardText += `${8 - index}  ${row.join(' ')}\n`;
-                });
-                document.getElementById('board-display').innerText = boardText;
-            });
-
-            socket.on('error_message', (data) => { alert("Error: " + data.message); });
-            socket.on('game_over', (data) => { alert("Game Over! " + data.message); });
-
-        } catch (error) {
-            document.getElementById('conn-status').innerText = "Connection configuration error.";
-        }
+        socket.on('error_message', (data) => { alert("Error: " + data.message); });
+        socket.on('game_over', (data) => { alert("Game Over! " + data.message); });
+        
+        socket.on('connect_error', () => {
+            document.getElementById('conn-status').innerText = "Handshake connection update sent. Trying fallback transport lines...";
+        });
     }
 
     function sendMove() {
@@ -101,10 +96,10 @@
         if(pos.length !== 2 || newPos.length !== 2) { alert("Use format like B3 and A4!"); return; }
 
         const columns = "ABCDEFGH";
-        const c = columns.indexOf(pos);
-        const r = 8 - parseInt(pos);
-        const nr = 8 - parseInt(newPos);
-        const nc = columns.indexOf(newPos);
+        const c = columns.indexOf(pos[0]);
+        const r = 8 - parseInt(pos[1]);
+        const nc = columns.indexOf(newPos[0]);
+        const nr = 8 - parseInt(newPos[1]);
 
         socket.emit('submit_move', {
             game_code: activeRoom,
