@@ -139,7 +139,7 @@ def home():
 <head>
     <meta charset="UTF-8">
     <title>Online Multiplayer Chequers</title>
-    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://cloudflare.com"></script>
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #1e1e24; color: #fff; text-align: center; padding: 20px; }
         .setup-box { background: #2a2a35; padding: 20px; max-width: 400px; margin: 40px auto; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
