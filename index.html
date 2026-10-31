@@ -61,7 +61,7 @@
         document.getElementById('conn-status').innerText = "Connecting to backend server...";
 
         // Force a robust cross-network websocket configuration
-        socket = io(RENDER_URL, {
+        socket = socket = window.io(RENDER_URL, {
             transports: ['websocket', 'polling'],
             forceNew: true
         });
