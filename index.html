@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Online Multiplayer Chequers</title>
+    <!-- Loads the real-time internet library directly in the browser -->
+    <script src="https://socket.io"></script>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #1e1e24; color: #fff; text-align: center; padding: 20px; }
+        .setup-box { background: #2a2a35; padding: 20px; max-width: 400px; margin: 40px auto; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+        input, select, button { width: 90%; padding: 10px; margin: 10px 0; border: none; border-radius: 4px; font-size: 16px; }
+        button { background-color: #4CAF50; color: white; font-weight: bold; cursor: pointer; }
+        button:hover { background-color: #45a049; }
+        #game-container { display: none; margin-top: 20px; }
+        #board-display { font-family: monospace; background: #000; padding: 15px; border-radius: 6px; display: inline-block; white-space: pre; font-size: 20px; line-height: 1.2; text-align: left; border: 3px solid #444; }
+        .status { margin: 15px; font-size: 18px; font-weight: bold; color: #00E676; }
+    </style>
+</head>
+<body>
+
+    <h1>🏆 Online Chequers 🏆</h1>
+
+    <!-- 1. MATCH SETUP PANEL -->
+    <div id="setup-panel" class="setup-box">
+        <h3>Match Setup</h3>
+        <input type="text" id="gameCode" placeholder="Enter Match Room Code (e.g. 123)">
+        <select id="playerColor">
+            <option value="R">Play as Red (R)</option>
+            <option value="W">Play as White (W)</option>
+        </select>
+        <button onclick="connectToMatch()">Join Game Room</button>
+        <p id="conn-status" style="color: #FFA726;"></p>
+    </div>
+
+    <!-- 2. GAME BOARD INTERFACE -->
+    <div id="game-container">
+        <div class="status" id="turn-indicator">Waiting for move...</div>
+        <div id="board-display">Loading board layout...</div>
+        
+        <div class="setup-box" style="margin-top: 20px;">
+            <h4>Submit a Move</h4>
+            <input type="text" id="currentPos" placeholder="Current Position (e.g. B3)" maxlength="2">
+            <input type="text" id="targetPos" placeholder="Target Position (e.g. A4)" maxlength="2">
+            <button onclick="sendMove()">Send Move Over Internet</button>
+        </div>
+    </div>
+
+<script>
+    // CRUCIAL: Replace this link with your exact live Render server link!
+    const RENDER_URL = "https://chequers.onrender.com/"; 
+    
+    let socket;
+    let myColor = "R";
+    let activeRoom = "";
+
+    function connectToMatch() {
+        const room = document.getElementById('gameCode').value.trim();
+        myColor = document.getElementById('playerColor').value;
+        activeRoom = room;
+
+        if(!room) { alert("Please enter a room code!"); return; }
+        document.getElementById('conn-status').innerText = "Connecting to backend server...";
+
+        // Connect directly over the web via WebSockets
+        socket = io(RENDER_URL);
+
+        socket.on('connect', () => {
+            document.getElementById('setup-panel').style.display = 'none';
+            document.getElementById('game-container').style.display = 'block';
+            socket.emit('join_match', { game_code: activeRoom });
+        });
+
+        // Listen for board updates from the server
+        socket.on('board_update', (data) => {
+            document.getElementById('turn-indicator').innerText = `Current Turn: ${data.turn} ${data.turn === myColor ? '(YOUR TURN)' : '(Waiting for opponent)'}`;
+            
+            // Build the visual text board
+            let boardText = "   A B C D E F G H\n";
+            data.board.forEach((row, index) => {
+                boardText += `${8 - index}  ${row.join(' ')}\n`;
+            });
+            document.getElementById('board-display').innerText = boardText;
+        });
+
+        socket.on('error_message', (data) => { alert("Error: " + data.message); });
+        socket.on('game_over', (data) => { alert("Game Over! " + data.message); });
+    }
+
+    function sendMove() {
+        const pos = document.getElementById('currentPos').value.toUpperCase().trim();
+        const newPos = document.getElementById('targetPos').value.toUpperCase().trim();
+        
+        if(pos.length !== 2 || newPos.length !== 2) { alert("Use format like B3 and A4!"); return; }
+
+        try {
+            const columns = "ABCDEFGH";
+            const c = columns.indexOf(pos[0]);
+            const r = 8 - parseInt(pos[1]);
+            const nc = columns.indexOf(newPos[0]);
+            const nr = 8 - parseInt(newPos[1]);
+
+            socket.emit('submit_move', {
+                game_code: activeRoom,
+                player_color: myColor,
+                r: r, c: c, nr: nr, nc: nc
+            });
+
+            // Clear inputs for next turn
+            document.getElementById('currentPos').value = "";
+            document.getElementById('targetPos').value = "";
+        } catch(e) {
+            alert("Invalid coordinate values submitted.");
+        }
+    }
+</script>
+</body>
+</html>
