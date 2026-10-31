@@ -193,23 +193,23 @@ def home():
 
         socket = io();
 
-        socket.on('connect', () => {
+        socket.on('connect', function() {
             document.getElementById('setup-panel').style.display = 'none';
             document.getElementById('game-container').style.display = 'block';
             socket.emit('join_match', { game_code: activeRoom });
         });
 
-        socket.on('board_update', (data) => {
-            document.getElementById('turn-indicator').innerText = `Current Turn: ${data.turn} ${data.turn === myColor ? '(YOUR TURN)' : '(Waiting for opponent)'}`;
-            let boardText = "   A B C D E F G H\n";
-            data.board.forEach((row, index) => {
-                boardText += `${8 - index}  ${row.join(' ')}\n`;
+        socket.on('board_update', function(data) {
+            document.getElementById('turn-indicator').innerText = "Current Turn: " + data.turn + (data.turn === myColor ? ' (YOUR TURN)' : ' (Waiting for opponent)');
+            let boardText = "   A B C D E F G H\\n";
+            data.board.forEach(function(row, index) {
+                boardText += (8 - index) + "  " + row.join(' ') + "\\n";
             });
             document.getElementById('board-display').innerText = boardText;
         });
 
-        socket.on('error_message', (data) => { alert("Error: " + data.message); });
-        socket.on('game_over', (data) => { alert("Game Over! " + data.message); });
+        socket.on('error_message', function(data) { alert("Error: " + data.message); });
+        socket.on('game_over', function(data) { alert("Game Over! " + data.message); });
     }
 
     function sendMove() {
