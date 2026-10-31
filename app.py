@@ -141,7 +141,8 @@ def home():
     <title>Online Multiplayer Chequers</title>
     
     <!-- This is a highly stable, secure direct library link -->
-    <script src="https://socket.io"></script>
+    <script src="https://unpkg.com"></script>
+    
 
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #1e1e24; color: #fff; text-align: center; padding: 20px; }
