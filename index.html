@@ -102,9 +102,9 @@
 
         const columns = "ABCDEFGH";
         const c = columns.indexOf(pos);
-        const r = 8 - parseInt(pos.slice(1));
+        const r = 8 - parseInt(pos);
+        const nr = 8 - parseInt(newPos);
         const nc = columns.indexOf(newPos);
-        const nr = 8 - parseInt(newPos.slice(1));
 
         socket.emit('submit_move', {
             game_code: activeRoom,
