@@ -1,9 +1,9 @@
-from flask import Flask
+from flask import Flask, render_template_string
 from flask_socketio import SocketIO, emit, join_room
 import os
 
 app = Flask(__name__)
-socketio = SocketIO(app, cors_allowed_origins="*", async_mode='threading', logger=True, engineio_logger=True)
+socketio = SocketIO(app, cors_allowed_origins="*", async_mode='threading')
 
 # ==========================================
 #         YOUR CORRECTED GAME LOGIC
@@ -133,7 +133,159 @@ ACTIVE_GAMES = {}
 
 @app.route('/')
 def home():
-    return "Chequers Server Active."
+    return render_template_string('''
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Online Multiplayer Chequers</title>
+    <script src="/socket.io/socket.io.js"></script>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #1e1e24; color: #fff; text-align: center; padding: 20px; }
+        .setup-box { background: #2a2a35; padding: 20px; max-width: 400px; margin: 40px auto; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+        input, select, button { width: 90%; padding: 10px; margin: 10px 0; border: none; border-radius: 4px; font-size: 16px; }
+        button { background-color: #4CAF50; color: white; font-weight: bold; cursor: pointer; }
+        button:hover { background-color: #45a049; }
+        #game-container { display: none; margin-top: 20px; }
+        #board-display { font-family: monospace; background: #000; padding: 15px; border-radius: 6px; display: inline-block; white-space: pre; font-size: 20px; line-height: 1.2; text-align: left; border: 3px solid #444; }
+        .status { margin: 15px; font-size: 18px; font-weight: bold; color: #00E676; }
+    </style>
+</head>
+<body>
+
+    <h1>🏆 Online Chequers 🏆</h1>
+
+    <div id="setup-panel" class="setup-box">
+        <h3>Match Setup</h3>
+        <input type="text" id="gameCode" placeholder="Enter Match Room Code">
+        <select id="playerColor">
+            <option value="R">Play as Red (R)</option>
+            <option value="W">Play as White (W)</option>
+        </select>
+        <button onclick="connectToMatch()">Join Game Room</button>
+        <p id="conn-status" style="color: #FFA726;"></p>
+    </div>
+
+    <div id="game-container">
+        <div class="status" id="turn-indicator">Waiting for move...</div>
+        <div id="board-display">Loading board layout...</div>
+        
+        <div class="setup-box" style="margin-top: 20px;">
+            <h4>Submit a Move</h4>
+            <input type="text" id="currentPos" placeholder="Current Piece (e.g. B3)" maxlength="2">
+            <input type="text" id="targetPos" placeholder="Target Slot (e.g. A4)" maxlength="2">
+            <button onclick="sendMove()">Send Move Over Internet</button>
+        </div>
+    </div>
+
+<script>
+    let socket;
+    let myColor = "R";
+    let activeRoom = "";
+
+    function connectToMatch() {
+        const room = document.getElementById('gameCode').value.trim();
+        myColor = document.getElementById('playerColor').value;
+        activeRoom = room;
+
+        if(!room) { alert("Please enter a room code!"); return; }
+        document.getElementById('conn-status').innerText = "Connecting...";
+
+        socket = io();
+
+        socket.on('connect', () => {
+            document.getElementById('setup-panel').style.display = 'none';
+            document.getElementById('game-container').style.display = 'block';
+            socket.emit('join_match', { game_code: activeRoom });
+        });
+
+        socket.on('board_update', (data) => {
+            document.getElementById('turn-indicator').innerText = `Current Turn: ${data.turn} ${data.turn === myColor ? '(YOUR TURN)' : '(Waiting for opponent)'}`;
+            let boardText = "   A B C D E F G H\n";
+            data.board.forEach((row, index) => {
+                boardText += `${8 - index}  ${row.join(' ')}\n`;
+            });
+            document.getElementById('board-display').innerText = boardText;
+        });
+
+        socket.on('error_message', (data) => { alert("Error: " + data.message); });
+        socket.on('game_over', (data) => { alert("Game Over! " + data.message); });
+    }
+
+    function sendMove() {
+        const pos = document.getElementById('currentPos').value.toUpperCase().trim();
+        const newPos = document.getElementById('targetPos').value.toUpperCase().trim();
+        
+        if(pos.length !== 2 || newPos.length !== 2) { alert("Use format like B3 and A4!"); return; }
+
+        const columns = "ABCDEFGH";
+        const c = columns.indexOf(pos[0]);
+        const r = 8 - parseInt(pos[1]);
+        const nc = columns.indexOf(newPos[0]);
+        const nr = 8 - parseInt(newPos[1]);
+
+        if (isNaN(r) || isNaN(nr) || c === -1 || nc === -1) { alert("Invalid Coordinates!"); return; }
+
+        socket.emit('submit_move', {
+            game_code: activeRoom,
+            player_color: myColor,
+            r: r, c: c, nr: nr, nc: nc
+        });
+
+        document.getElementById('currentPos').value = "";
+        document.getElementById('targetPos').value = "";
+    }
+</script>
+</body>
+</html>
+    ''')
+
+# ==========================================
+#        NETWORKING NET HANDSHAKES
+# ==========================================
+
+ACTIVE_GAMES = {}
+
+@socketio.on('join_match')
+def on_join(data):
+    room = data['game_code']
+    join_room(room)
+    if room not in ACTIVE_GAMES:
+        ACTIVE_GAMES[room] = game()
+        ACTIVE_GAMES[room].start_game()
+    
+    current_game = ACTIVE_GAMES[room]
+    emit('board_update', {
+        'board': current_game.board.board, 
+        'turn': current_game.current_turn
+    })
+
+@socketio.on('submit_move')
+def on_move(data):
+    room = data['game_code']
+    player_color = data['player_color']
+    current_game = ACTIVE_GAMES.get(room)
+    
+    if not current_game: return
+    if current_game.current_turn != player_color:
+        emit('error_message', {'message': "It is not your turn yet!"})
+        return
+
+    # This routes into your original move piece logic
+    success = current_game.board.move_piece(data['r'], data['c'], data['nr'], data['nc'], player_color)
+    
+    if success:
+        current_game.switch_turn()
+        emit('board_update', {
+            'board': current_game.board.board, 
+            'turn': current_game.current_turn
+        }, to=room)
+    else:
+        emit('error_message', {'message': "Invalid move alignment!"})
+
+if __name__ == '__main__':
+    port = int(os.environ.get("PORT", 5000))
+    socketio.run(app, host='0.0.0.0', port=port, allow_unsafe_werkzeug=True)
 
 @socketio.on('join_match')
 def on_join(data):
