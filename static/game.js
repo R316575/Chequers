@@ -32,6 +32,7 @@ function startGameStatePolling() {
                 document.getElementById('opponent-lbl').innerText = `Opponent: ${myColor === 'R' ? data.w_name : data.r_name} (${myColor === 'R' ? 'W' : 'R'})`;
                 
                 document.getElementById('turn-indicator').innerText = `Turn: ${data.turn === 'R' ? 'Red' : 'White'}`;
+                document.getElementById('display-code').innerText = roomCode;
                 
                 // 1. Render the main 8x8 checkerboard grid layout
                 renderBoard(data.board);
