@@ -162,13 +162,13 @@ def api_join_room():
         r_name = p_list[0]['name'] if len(p_list) > 0 else "Host"
         w_name = p_list[1]['name'] if len(p_list) > 1 else username
         
-        # --- THE REAL-TIME SYNC FIX ---
-        # This tells BOTH players simultaneously via WebSockets to hide the lobby and render the board
+        # GLOBAL BROADCAST FIX: Broadcast to all active sessions; client logic handles filtering
         socketio.emit('game_ready', {
+            'room_code': room,
             'r_name': r_name,
             'w_name': w_name,
             'board': game_info['board'].board
-        }, to=room)
+        })
         
         return jsonify({
             'success': True,
