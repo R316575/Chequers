@@ -1,0 +1,44 @@
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #fcfaf2; /* low-strain bone white */
+    margin: 0; padding: 0;
+    display: flex; flex-direction: column; align-items: center;
+}
+#top-bar {
+    width: 100%; max-width: 600px; display: flex; 
+    justify-content: space-between; padding: 10px; background: #e3dec3;
+}
+#checkers-board {
+    display: grid; grid-template-columns: repeat(8, 1fr); 
+    grid-template-rows: repeat(8, 1fr);
+    width: 90vw; height: 90vw; max-width: 480px; max-height: 480px;
+    border: 4px solid #4a3c31;
+}
+/* Alternating English Tournament Color Matrix Codes */
+.cream-tile { background-color: #f7ebd3; }
+.green-tile { background-color: #2b593f; position: relative; }
+
+/* Interactive Selection Matrices */
+.selected-piece { box-shadow: 0 0 15px 5px #ffd700 !important; }
+.hint-highlight::after {
+    content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    background-color: rgba(255, 215, 0, 0.4); /* eye-catching soft yellow glow */
+}
+
+/* Counters Graphic Layout Structures */
+.piece {
+    width: 80%; height: 80%; border-radius: 50%; margin: 10%;
+    display: flex; justify-content: center; align-items: center;
+    font-size: 24px; cursor: pointer;
+}
+.red-p { background-color: #b01b1b; border: 2px solid #540606; color: white; }
+.white-p { background-color: #ffffff; border: 2px solid #a8a8a8; color: black; }
+
+/* Modals & Overlays setup */
+.modal {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.6); display: flex; justify-content: center; align-items: center; z-index: 100;
+}
+.modal-content { background: #fffcf2; padding: 25px; border-radius: 4px; text-align: center; border: 3px solid #2b593f; }
+.hidden { display: none !important; }
+.capture-zone { min-height: 30px; letter-spacing: 5px; font-size: 20px; color: #4a3c31; }
