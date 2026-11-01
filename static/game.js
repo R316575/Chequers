@@ -5,15 +5,26 @@ let myColor = null;
 let selectedTile = null;
 let boardState = [];
 
+// 2. INITIALIZATION (With a safe self-healing check loop)
 document.addEventListener("DOMContentLoaded", () => {
-    socket = io(); // This is Line 10, which will now find the local script safely
-    
-    // Set up real-time network listener triggers
-    setupSocketListeners();
-    
-    // Set up user interface button click handlers
-    setupUserInterface();
+    initSocketWithRetry();
 });
+
+function initSocketWithRetry() {
+    // Check if the io library has finished loading into the browser memory yet
+    if (typeof io !== 'undefined') {
+        console.log("Socket.IO client library successfully detected!");
+        socket = io();
+        
+        // Initialize everything safely now that 'io' is guaranteed to exist
+        setupSocketListeners();
+        setupUserInterface();
+    } else {
+        console.warn("Socket.IO not ready yet. Retrying in 100ms...");
+        // Wait 100 milliseconds and try again automatically
+        setTimeout(initSocketWithRetry, 100);
+    }
+}
 
 // 3. NETWORK LISTENERS
 function setupSocketListeners() {
@@ -106,7 +117,7 @@ function handleTileClick(r, c) {
 
 function calculateHints(r, c) {
     const isKing = boardState[r][c] === boardState[r][c].toUpperCase();
-    const directions = isKing ? [[-1,-1],[-1,1],[1,-1],[1,1]] : (myColor === 'R' ? [[-1,-1],[-1,1]] : [[1,-1],[1,1]]);
+    const directions = isKing ? [[-1,-1],[-1,1],[1,-1],] : (myColor === 'R' ? [[-1,-1],[-1,1]] : [[1,-1],]);
     directions.forEach(([dr, dc]) => {
         let nr = r + dr, nc = c + dc;
         if (0 <= nr && nr < 8 && 0 <= nc && nc < 8 && boardState[nr][nc] === " ") {
