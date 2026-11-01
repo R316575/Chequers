@@ -109,11 +109,14 @@ class Board:
                                         return False
         return True
 
-# --- HTTP API ROUTE ENDPOINTS ---
+# --- HTTP ROUTES ---
 @app.route('/')
 def index():
+    # Serves the single page application HTML
     return render_template('index.html')
 
+
+# 1. HTTP ROUTE: CREATE ROOM (Correct Single Version)
 @app.route('/api/create_room', methods=['POST'])
 def api_create_room():
     data = request.get_json() or {}
@@ -127,6 +130,8 @@ def api_create_room():
     }
     return jsonify({'room_code': room, 'color': 'R'})
 
+
+# 2. HTTP ROUTE: JOIN ROOM
 @app.route('/api/join_room', methods=['POST'])
 def api_join_room():
     data = request.get_json() or {}
@@ -143,6 +148,8 @@ def api_join_room():
         return jsonify({'success': True, 'room_code': room, 'color': 'W'})
     return jsonify({'success': False, 'error': 'Invalid Room Code.'}), 400
 
+
+# 3. HTTP ROUTE: SYNC DATA STATE POLLING
 @app.route('/api/get_game_state', methods=['GET'])
 def api_get_game_state():
     room = request.args.get('room_code', '').upper()
@@ -164,35 +171,49 @@ def api_get_game_state():
             'r_name': r_name,
             'w_name': w_name,
             'board': board_obj.board,
-            'r_score': board_obj.r_score,
-            'w_score': board_obj.w_score,
+            'r_score': board_obj.r_score,  # Tracks captured white pieces
+            'w_score': board_obj.w_score,  # Tracks captured red pieces
             'winner': winner
         })
     return jsonify({'error': 'Invalid Room Code'}), 404
 
+
+# 4. HTTP ROUTE: MAKE MOVE PLACEMENTS
 @app.route('/api/make_move', methods=['POST'])
 def api_make_move():
     data = request.get_json() or {}
     room = data.get('room_code', '').upper()
     player_color = data.get('color')
     
-    if room not in ACTIVE_GAMES: return jsonify({'error': 'Room not found'}), 404
+    if room not in ACTIVE_GAMES: 
+        return jsonify({'error': 'Room not found'}), 404
+        
     game_info = ACTIVE_GAMES[room]
     board_obj = game_info['board']
     
-    if board_obj.current_turn != player_color: return jsonify({'error': "It's not your turn!"})
+    if board_obj.current_turn != player_color:
+        return jsonify({'error': "It's not your turn yet!"})
         
     success, msg = board_obj.validate_and_move(data['r'], data['c'], data['nr'], data['nc'], player_color)
-    if not success: return jsonify({'error': msg})
+    if not success:
+        return jsonify({'error': msg})
+        
     return jsonify({'success': True})
 
-# Fallback Websocket Stubs to handle library links safely
+
+# --- LEAVE EMPTY FALLBACK SOCKET STUBS UNCHANGED BELOW ---
 @socketio.on('join_game')
-def on_join(data): pass
+def on_join(data):
+    pass
+
 @socketio.on('make_move')
-def on_move(data): pass
+def on_move(data):
+    pass
+
 @socketio.on('disconnect')
-def on_disconnect(): pass
+def on_disconnect():
+    pass
+
 
 if __name__ == '__main__':
     socketio.run(app, debug=True)
