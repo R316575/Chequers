@@ -23,6 +23,17 @@ function startGameStatePolling() {
             return response.json();
         })
         .then(data => {
+            // ALWAYS render the current board matrix layout so it never shows a blank screen
+            renderBoard(data.board);
+            updateCaptureZones(data.r_score || 0, data.w_score || 0);
+            document.getElementById('turn-indicator').innerText = `Turn: ${data.turn === 'R' ? 'Red' : 'White'}`;
+            
+            const codeHeader = document.getElementById('display-code');
+            if (codeHeader) {
+                codeHeader.innerText = roomCode;
+            }
+
+            // Transition user interface screens only when an opponent enters
             if (data.started) {
                 document.getElementById('alert-overlay').classList.add('hidden');
                 document.getElementById('lobby-modal').classList.add('hidden');
@@ -30,16 +41,6 @@ function startGameStatePolling() {
                 
                 document.getElementById('user-lbl').innerText = `You: ${myColor === 'R' ? data.r_name : data.w_name} (${myColor})`;
                 document.getElementById('opponent-lbl').innerText = `Opponent: ${myColor === 'R' ? data.w_name : data.r_name} (${myColor === 'R' ? 'W' : 'R'})`;
-                
-                document.getElementById('turn-indicator').innerText = `Turn: ${data.turn === 'R' ? 'Red' : 'White'}`;
-                
-                const codeHeader = document.getElementById('display-code');
-                if (codeHeader) {
-                    codeHeader.innerText = roomCode;
-                }
-                
-                renderBoard(data.board);
-                updateCaptureZones(data.r_score || 0, data.w_score || 0);
                 
                 if (data.winner) {
                     showAlert("Game Over!", `${data.winner} Wins the match!`);
