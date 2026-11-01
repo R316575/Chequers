@@ -141,7 +141,20 @@ def api_create_room():
     }
     return jsonify({'room_code': room, 'color': 'R'})
 
-# API ROUTE FOR THE SECOND PLAYER TO JOIN A ROOM
+@app.route('/api/create_room', methods=['POST'])
+def api_create_room():
+    data = request.get_json() or {}
+    username = data.get('username', 'Player 1')[:12]
+    room = str(uuid.uuid4())[:5].upper()
+    
+    ACTIVE_GAMES[room] = {
+        'board': Board(),
+        'players': {'user_1': {'name': username, 'color': 'R'}},
+        'started': False
+    }
+    return jsonify({'room_code': room, 'color': 'R'})
+
+# 2. HTTP ROUTE: JOIN ROOM
 @app.route('/api/join_room', methods=['POST'])
 def api_join_room():
     data = request.get_json() or {}
@@ -150,50 +163,61 @@ def api_join_room():
     
     if room in ACTIVE_GAMES:
         game_info = ACTIVE_GAMES[room]
-        
         if len(game_info['players']) >= 2:
             return jsonify({'success': False, 'error': 'Room is full!'}), 400
             
-        player_id = f"user_{len(game_info['players']) + 1}"
-        game_info['players'][player_id] = {'name': username, 'color': 'W'}
+        game_info['players']['user_2'] = {'name': username, 'color': 'W'}
         game_info['started'] = True
+        return jsonify({'success': True, 'room_code': room, 'color': 'W'})
+    return jsonify({'success': False, 'error': 'Invalid Room Code.'}), 400
+
+# 3. HTTP ROUTE: SYNC DATA STATE POLLING
+@app.route('/api/get_game_state', methods=['GET'])
+def api_get_game_state():
+    room = request.args.get('room_code', '').upper()
+    if room in ACTIVE_GAMES:
+        game_info = ACTIVE_GAMES[room]
+        board_obj = game_info['board']
+        p_vals = list(game_info['players'].values())
         
-        p_list = list(game_info['players'].values())
-        r_name = p_list[0]['name'] if len(p_list) > 0 else "Host"
-        w_name = p_list[1]['name'] if len(p_list) > 1 else username
+        r_name = p_vals[0]['name'] if len(p_vals) > 0 else "Host"
+        w_name = p_vals[1]['name'] if len(p_vals) > 1 else "Waiting..."
         
-        # GLOBAL BROADCAST FIX: Broadcast to all active sessions; client logic handles filtering
-        socketio.emit('game_ready', {
-            'room_code': room,
-            'r_name': r_name,
-            'w_name': w_name,
-            'board': game_info['board'].board
-        })
+        winner = None
+        if board_obj.r_score == 12 or board_obj.check_no_moves("W"): winner = "Red"
+        elif board_obj.w_score == 12 or board_obj.check_no_moves("R"): winner = "White"
         
         return jsonify({
-            'success': True,
-            'room_code': room,
-            'color': 'W',
+            'started': game_info['started'],
+            'turn': board_obj.current_turn,
             'r_name': r_name,
             'w_name': w_name,
-            'board': game_info['board'].board
+            'board': board_obj.board,
+            'winner': winner
         })
-    else:
-        return jsonify({'success': False, 'error': 'Invalid Room Code.'}), 400
-# --- SOCKET EVENTS ---
-@socketio.on('create_game')
-def on_create(data):
-    """Fallback handler matching standard frontend initialization requests."""
-    username = data.get('username', 'Player 1')[:12]
-    room = str(uuid.uuid4())[:5].upper() # 5 character code
-    join_room(room)
-    ACTIVE_GAMES[room] = {
-        'board': Board(),
-        'players': {request.sid: {'name': username, 'color': 'R'}},
-        'started': False,
-        'disconnect_timer': None
-    }
-    emit('room_created', {'room_code': room, 'color': 'R'})
+    return jsonify({'error': 'Invalid Room Code'}), 404
+
+# 4. HTTP ROUTE: MAKE MOVE PLACEMENTS
+@app.route('/api/make_move', methods=['POST'])
+def api_make_move():
+    data = request.get_json() or {}
+    room = data.get('room_code', '').upper()
+    player_color = data.get('color')
+    
+    if room not in ACTIVE_GAMES: 
+        return jsonify({'error': 'Room not found'}), 404
+        
+    game_info = ACTIVE_GAMES[room]
+    board_obj = game_info['board']
+    
+    if board_obj.current_turn != player_color:
+        return jsonify({'error': "It's not your turn yet!"})
+        
+    success, msg = board_obj.validate_and_move(data['r'], data['c'], data['nr'], data['nc'], player_color)
+    if not success:
+        return jsonify({'error': msg})
+        
+    return jsonify({'success': True})
 
 
 @socketio.on('join_game')
