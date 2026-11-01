@@ -1,30 +1,15 @@
-// 1. GLOBAL VARIABLES & STATE (Always at the very top)
 let socket;
 let roomCode = null;
 let myColor = null;
 let selectedTile = null;
 let boardState = [];
 
-// 2. INITIALIZATION (With a safe self-healing check loop)
+// 2. INITIALIZATION (Will now run instantly without loop delays)
 document.addEventListener("DOMContentLoaded", () => {
-    initSocketWithRetry();
+    socket = io();
+    setupSocketListeners();
+    setupUserInterface();
 });
-
-function initSocketWithRetry() {
-    // Check if the io library has finished loading into the browser memory yet
-    if (typeof io !== 'undefined') {
-        console.log("Socket.IO client library successfully detected!");
-        socket = io();
-        
-        // Initialize everything safely now that 'io' is guaranteed to exist
-        setupSocketListeners();
-        setupUserInterface();
-    } else {
-        console.warn("Socket.IO not ready yet. Retrying in 100ms...");
-        // Wait 100 milliseconds and try again automatically
-        setTimeout(initSocketWithRetry, 100);
-    }
-}
 
 // 3. NETWORK LISTENERS
 function setupSocketListeners() {
