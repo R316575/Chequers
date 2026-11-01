@@ -126,6 +126,12 @@ def index():
     return render_template('index.html')
 
 # NEW COMPATIBILITY ROUTE FOR PRIVATE ROOMS
+@app.route('/')
+def index():
+    # Serves the single page application HTML
+    return render_template('index.html')
+
+# NEW COMPATIBILITY ROUTE FOR PRIVATE ROOMS
 @app.route('/api/create_room', methods=['POST'])
 def api_create_room():
     data = request.get_json() or {}
@@ -140,9 +146,11 @@ def api_create_room():
     }
     return jsonify({'room_code': room, 'color': 'R'})
 
+
 # --- SOCKET EVENTS ---
 @socketio.on('create_game')
 def on_create(data):
+    """Fallback handler matching standard frontend initialization requests."""
     username = data.get('username', 'Player 1')[:12]
     room = str(uuid.uuid4())[:5].upper() # 5 character code
     join_room(room)
@@ -154,24 +162,44 @@ def on_create(data):
     }
     emit('room_created', {'room_code': room, 'color': 'R'})
 
+
 @socketio.on('join_game')
 def on_join(data):
-    username = data.get('username', 'Player 2')[:12]
+    username = data.get('username', 'Player')[:12]
     room = data.get('room_code', '').upper()
+    
     if room in ACTIVE_GAMES:
         game_info = ACTIVE_GAMES[room]
-        if len(game_info['players']) >= 2:
+        
+        # Check if the room is already full
+        if len(game_info['players']) >= 2 and request.sid not in game_info['players']:
             emit('error_msg', 'Room is full!')
             return
+            
         join_room(room)
-        game_info['players'][request.sid] = {'name': username, 'color': 'W'}
-        game_info['started'] = True
         
-        # Broadcast initiation configuration to both peers
-        p_list = list(game_info['players'].values())
-        emit('game_ready', {'r_name': p_list[0]['name'], 'w_name': p_list[1]['name'], 'board': game_info['board'].board}, to=room)
+        # Scenario A: Host is registering their websocket session right after the HTTP POST step
+        if len(game_info['players']) == 0:
+            game_info['players'][request.sid] = {'name': username, 'color': 'R'}
+            emit('room_created', {'room_code': room, 'color': 'R'})
+            
+        # Scenario B: Second peer is joining the game room
+        elif len(game_info['players']) == 1 and request.sid not in game_info['players']:
+            game_info['players'][request.sid] = {'name': username, 'color': 'W'}
+            game_info['started'] = True
+            
+            # Extract both verified player profiles from the room database safely
+            p_list = list(game_info['players'].values())
+            
+            # Broadcast configuration details to both peers to seamlessly drop the modal screen
+            emit('game_ready', {
+                'r_name': p_list[0]['name'], 
+                'w_name': p_list[1]['name'], 
+                'board': game_info['board'].board
+            }, to=room)
     else:
         emit('error_msg', 'Invalid Room Code.')
+
 
 @socketio.on('make_move')
 def on_move(data):
@@ -180,21 +208,30 @@ def on_move(data):
     game_info = ACTIVE_GAMES[room]
     board_obj = game_info['board']
     
+    # Validation step to check if player session is actually registered in this room
+    if request.sid not in game_info['players']:
+        emit('error_msg', "Unauthorised session request.")
+        return
+        
     player_color = game_info['players'][request.sid]['color']
     if board_obj.current_turn != player_color:
         emit('error_msg', "It's not your turn yet!")
         return
 
+    # Process and execute coordinates directly via your original game matrix calculations
     success, msg = board_obj.validate_and_move(data['r'], data['c'], data['nr'], data['nc'], player_color)
     if not success:
         emit('error_msg', msg)
         return
 
-    # Check terminal metrics
+    # Check terminal win-loss conditions
     winner = None
-    if board_obj.r_score == 12 or board_obj.check_no_moves("W"): winner = "Red"
-    elif board_obj.w_score == 12 or board_obj.check_no_moves("R"): winner = "White"
+    if board_obj.r_score == 12 or board_obj.check_no_moves("W"): 
+        winner = "Red"
+    elif board_obj.w_score == 12 or board_obj.check_no_moves("R"): 
+        winner = "White"
 
+    # Synchronise the updated map to both clients simultaneously in real-time
     emit('update_board', {
         'board': board_obj.board, 
         'turn': board_obj.current_turn, 
@@ -203,18 +240,26 @@ def on_move(data):
         'winner': winner
     }, to=room)
 
+
 @socketio.on('disconnect')
 def on_disconnect():
     for room, game_info in list(ACTIVE_GAMES.items()):
         if request.sid in game_info['players']:
+            # Alert the remaining peer that their opponent has temporarily dropped connection
             emit('connection_lost', to=room)
-            # Start a background thread counting down 30 seconds for recovery
-            def countdown():
+            
+            # Start an isolated background tracking thread to handle a 30-second window for recovery
+            def countdown(target_room):
                 time.sleep(30)
-                if room in ACTIVE_GAMES and not len(ACTIVE_GAMES[room]['players']) == 2:
-                    socketio.emit('game_terminated', 'Opponent left permanently.', to=room)
-                    del ACTIVE_GAMES[room]
-            threading.Thread(target=countdown).start()
+                if target_room in ACTIVE_GAMES:
+                    current_room_info = ACTIVE_GAMES[target_room]
+                    # Terminate room permanently if the missing connection didn't rejoin in time
+                    if len(current_room_info['players']) < 2:
+                        socketio.emit('game_terminated', 'Opponent left permanently.', to=target_room)
+                        del ACTIVE_GAMES[target_room]
+                        
+            threading.Thread(target=countdown, args=(room,)).start()
+
 
 if __name__ == '__main__':
     socketio.run(app, debug=True)
