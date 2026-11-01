@@ -1,10 +1,11 @@
+// 1. GLOBAL VARIABLES & STATE
 let socket;
 let roomCode = null;
 let myColor = null;
 let selectedTile = null;
 let boardState = [];
 
-// 2. INITIALIZATION (Will now run instantly without loop delays)
+// 2. INITIALIZATION
 document.addEventListener("DOMContentLoaded", () => {
     socket = io();
     setupSocketListeners();
@@ -25,7 +26,6 @@ function setupSocketListeners() {
         document.getElementById('lobby-modal').classList.add('hidden');
         document.getElementById('game-container').classList.remove('hidden');
         
-        // Dynamically assign local dashboard metrics based on your color profile
         document.getElementById('user-lbl').innerText = `You: ${myColor === 'R' ? data.r_name : data.w_name} (${myColor})`;
         document.getElementById('opponent-lbl').innerText = `Opponent: ${myColor === 'R' ? data.w_name : data.r_name} (${myColor === 'R' ? 'W' : 'R'})`;
         renderBoard(data.board);
@@ -67,7 +67,6 @@ function setupUserInterface() {
                 document.getElementById('display-code').innerText = roomCode;
                 showAlert("Room Created", `Share Code: ${roomCode}. Waiting for your opponent.`);
                 
-                // Automatically registers the host's websocket session to the backend
                 socket.emit('join_game', { username: user, room_code: roomCode });
             })
             .catch(err => {
@@ -75,11 +74,8 @@ function setupUserInterface() {
                 showAlert("Connection Error", "Could not create a private room on the server.");
             });
         });
-    } else {
-        console.error("CRITICAL UI ERROR: Could not find HTML element with ID 'btn-create'!");
     }
 
-   // Upgraded join room button handler using stable HTTP POST requests
     const joinBtn = document.getElementById('btn-join');
     if (joinBtn) {
         joinBtn.addEventListener('click', () => {
@@ -103,7 +99,6 @@ function setupUserInterface() {
                 roomCode = data.room_code;
                 myColor = data.color;
                 
-                // Hide lobby modal and bring up your tournament board layout
                 document.getElementById('lobby-modal').classList.add('hidden');
                 document.getElementById('game-container').classList.remove('hidden');
                 
@@ -117,6 +112,8 @@ function setupUserInterface() {
             });
         });
     }
+}
+
 // 5. CHEQUERS RENDERING ENGINE
 function renderBoard(board) {
     boardState = board;
@@ -167,11 +164,12 @@ function handleTileClick(r, c) {
 
 function calculateHints(r, c) {
     const isKing = boardState[r][c] === boardState[r][c].toUpperCase();
-    const directions = isKing ? [[-1,-1],[-1,1],[1,-1],] : (myColor === 'R' ? [[-1,-1],[-1,1]] : [[1,-1],]);
+    const directions = isKing ? [[-1,-1],[-1,1],[1,-1],[1,1]] : (myColor === 'R' ? [[-1,-1],[-1,1]] : [[1,-1],[1,1]]);
     directions.forEach(([dr, dc]) => {
         let nr = r + dr, nc = c + dc;
         if (0 <= nr && nr < 8 && 0 <= nc && nc < 8 && boardState[nr][nc] === " ") {
-            document.querySelector(`[data-row="${nr}"][data-col="${nc}"]`).classList.add('hint-highlight');
+            const targetedTile = document.querySelector(`[data-row="${nr}"][data-col="${nc}"]`);
+            if (targetedTile) targetedTile.classList.add('hint-highlight');
         }
     });
 }
