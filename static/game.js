@@ -14,7 +14,6 @@ document.addEventListener("DOMContentLoaded", () => {
 function startGameStatePolling() {
     if (pollingInterval) clearInterval(pollingInterval);
     
-    // Check the server every 1500 milliseconds for changes
     pollingInterval = setInterval(() => {
         if (!roomCode) return;
         
@@ -24,7 +23,6 @@ function startGameStatePolling() {
             return response.json();
         })
         .then(data => {
-            // If the opponent joined, clear any waiting popups and uncover the board layout
             if (data.started) {
                 document.getElementById('alert-overlay').classList.add('hidden');
                 document.getElementById('lobby-modal').classList.add('hidden');
@@ -34,7 +32,12 @@ function startGameStatePolling() {
                 document.getElementById('opponent-lbl').innerText = `Opponent: ${myColor === 'R' ? data.w_name : data.r_name} (${myColor === 'R' ? 'W' : 'R'})`;
                 
                 document.getElementById('turn-indicator').innerText = `Turn: ${data.turn === 'R' ? 'Red' : 'White'}`;
+                
+                // 1. Render the main 8x8 checkerboard grid layout
                 renderBoard(data.board);
+                
+                // 2. RUN THE SIDE BAR CAPTURE HOOK: Pull scores and draw circles
+                updateCaptureZones(data.r_score || 0, data.w_score || 0);
                 
                 if (data.winner) {
                     showAlert("Game Over!", `${data.winner} Wins the match!`);
