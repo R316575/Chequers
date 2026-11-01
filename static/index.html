@@ -23,18 +23,22 @@
         <button id="rules-nav-btn">HOW TO PLAY</button>
     </div>
 
-    <!-- MULTIPLAYER LOBBY WINDOW SCREEN -->
-    <div id="lobby-modal" class="modal">
-        <div class="modal-content">
-            <h2>Chequers Lobby</h2>
-            <input type="text" id="username-input" placeholder="Username (max 12 chars)" maxlength="12">
-            <hr>
-            <button id="btn-create">Create a Private Room</button>
-            <p>OR</p>
-            <input type="text" id="join-code-input" placeholder="Enter Room Code">
-            <button id="btn-join">Join Room</button>
-        </div>
+<!-- MULTIPLAYER LOBBY WINDOW SCREEN -->
+<div id="lobby-modal" class="modal">
+    <div class="modal-content">
+        <h2>Chequers Lobby</h2>
+        <!-- Input for user name -->
+        <input type="text" id="username-input" placeholder="Username (max 12 chars)" maxlength="12">
+        <hr>
+        <!-- The button ID must be exactly btn-create -->
+        <button id="btn-create">Create a Private Room</button>
+        <p>OR</p>
+        <!-- Input for room code -->
+        <input type="text" id="join-code-input" placeholder="Enter Room Code">
+        <!-- The button ID must be exactly btn-join -->
+        <button id="btn-join">Join Room</button>
     </div>
+</div>
 
     <!-- GAMEPLAY AREA -->
     <div id="game-container" class="hidden">
