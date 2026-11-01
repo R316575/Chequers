@@ -141,6 +141,40 @@ def api_create_room():
     }
     return jsonify({'room_code': room, 'color': 'R'})
 
+@app.route('/api/join_room', methods=['POST'])
+def api_join_room():
+    data = request.get_json() or {}
+    username = data.get('username', 'Player 2')[:12]
+    room = data.get('room_code', '').upper()
+    
+    if room in ACTIVE_GAMES:
+        game_info = ACTIVE_GAMES[room]
+        
+        # Check if the room is already full (maximum 2 players)
+        if len(game_info['players']) >= 2:
+            return jsonify({'success': False, 'error': 'Room is full!'}), 400
+            
+        # Add the second player to our memory database
+        # Since HTTP is stateless, we use a temporary unique key for their session profile
+        player_id = f"user_{len(game_info['players']) + 1}"
+        game_info['players'][player_id] = {'name': username, 'color': 'W'}
+        game_info['started'] = True
+        
+        # Extract both player names safely
+        p_list = list(game_info['players'].values())
+        r_name = p_list[0]['name'] if len(p_list) > 0 else "Host"
+        w_name = p_list[1]['name'] if len(p_list) > 1 else username
+        
+        return jsonify({
+            'success': True,
+            'room_code': room,
+            'color': 'W',
+            'r_name': r_name,
+            'w_name': w_name,
+            'board': game_info['board'].board
+        })
+    else:
+        return jsonify({'success': False, 'error': 'Invalid Room Code.'}), 400
 
 # --- SOCKET EVENTS ---
 @socketio.on('create_game')
