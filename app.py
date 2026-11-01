@@ -123,8 +123,22 @@ class Board:
 # --- HTTP ROUTES ---
 @app.route('/')
 def index():
-    # Serves the single page application HTML
     return render_template('index.html')
+
+# NEW COMPATIBILITY ROUTE FOR PRIVATE ROOMS
+@app.route('/api/create_room', methods=['POST'])
+def api_create_room():
+    data = request.get_json() or {}
+    username = data.get('username', 'Player 1')[:12]
+    room = str(uuid.uuid4())[:5].upper() # 5 character alphanumeric string
+    
+    ACTIVE_GAMES[room] = {
+        'board': Board(),
+        'players': {}, # Will map client sessions cleanly upon entrance socket connect strings
+        'started': False,
+        'disconnect_timer': None
+    }
+    return jsonify({'room_code': room, 'color': 'R'})
 
 # --- SOCKET EVENTS ---
 @socketio.on('create_game')
