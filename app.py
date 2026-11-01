@@ -14,6 +14,7 @@ ACTIVE_GAMES = {} # room_code: { 'board': board_obj, 'players': {sid: 'R'}, 'sta
 
 class Board:
     def __init__(self):
+        # Build a clean, empty 8x8 matrix grid template
         self.board = [[" " for _ in range(8)] for _ in range(8)]
         self.w_score = 0
         self.r_score = 0
@@ -21,17 +22,15 @@ class Board:
         self.initialise_board()
 
     def initialise_board(self):
-        for x in range(8):
-            if (x % 2) == 0:
-                if x < 3:
-                    self.board[x][1], self.board[x][3], self.board[x][5], self.board[x][7] = "w", "w", "w", "w"
-                elif x > 4:
-                    self.board[x][1], self.board[x][3], self.board[x][5], self.board[x][7] = "r", "r", "r", "r"
-            else:
-                if x < 3:
-                    self.board[x][0], self.board[x][2], self.board[x][4], self.board[x][6] = "w", "w", "w", "w"
-                elif x > 4:
-                    self.board[x][0], self.board[x][2], self.board[x][4], self.board[x][6] = "r", "r", "r", "r"
+        """Populates red and white pieces on correct dark squares according to English draughts standards."""
+        for row in range(8):
+            for col in range(8):
+                # Checkers pieces only live on alternating squares where (row + col) is odd
+                if (row + col) % 2 == 1:
+                    if row < 3:
+                        self.board[row][col] = "w"  # White pieces fill top 3 rows
+                    elif row > 4:
+                        self.board[row][col] = "r"  # Red pieces fill bottom 3 rows
 
     def switch_turn(self):
         self.current_turn = "W" if self.current_turn == "R" else "R"
