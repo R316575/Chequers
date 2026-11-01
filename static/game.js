@@ -81,33 +81,46 @@ function setupUserInterface() {
         .catch(err => showAlert("Connection Error", "Could not create room."));
     });
 
-    // Join Room
-    document.getElementById('btn-join').addEventListener('click', () => {
-        const user = document.getElementById('username-input').value || "Player 2";
-        const code = document.getElementById('join-code-input').value.toUpperCase();
-        
-        fetch('/api/join_room', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username: user, room_code: code })
-        })
-        .then(response => {
-            if (!response.ok) return response.json().then(err => { throw new Error(err.error); });
-            return response.json();
-        })
-        .then(data => {
-            roomCode = data.room_code;
-            myColor = data.color;
+    // Join Room handler configuration
+    const joinBtn = document.getElementById('btn-join');
+    if (joinBtn) {
+        joinBtn.addEventListener('click', () => {
+            const user = document.getElementById('username-input').value || "Player 2";
+            const code = document.getElementById('join-code-input').value.toUpperCase();
+            console.log(`Attempting to join room: ${code} via HTTP API as user: ${user}`);
             
-            document.getElementById('lobby-modal').classList.add('hidden');
-            document.getElementById('game-container').classList.remove('hidden');
-            
-            // Instantly start polling to track piece moves made by the opponent
-            startGameStatePolling();
-        })
-        .catch(err => showAlert("Lobby Join Error", err.message));
-    });
-}
+            fetch('/api/join_room', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: user, room_code: code })
+            })
+            .then(response => {
+                if (!response.ok) return response.json().then(err => { throw new Error(err.error); });
+                return response.json();
+            })
+            .then(data => {
+                console.log("Successfully joined room! Payload:", data);
+                
+                // CRITICAL FIX: Save the active code parameters into local browser memory
+                roomCode = code; 
+                myColor = data.color;
+                
+                document.getElementById('lobby-modal').classList.add('hidden');
+                document.getElementById('game-container').classList.remove('hidden');
+                
+                document.getElementById('user-lbl').innerText = `You: ${data.w_name} (W)`;
+                document.getElementById('opponent-lbl').innerText = `Opponent: ${data.r_name} (R)`;
+                renderBoard(data.board);
+                
+                // Launch background polling sync updates now that roomCode is set
+                startGameStatePolling();
+            })
+            .catch(err => {
+                console.error("Join room error:", err);
+                showAlert("Lobby Join Error", err.message || "Could not connect to the match room.");
+            });
+        });
+    }
 
 // 5. CHEQUERS RENDERING ENGINE (With state preservation and side panel capture tracking)
 function renderBoard(board) {
