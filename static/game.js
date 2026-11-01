@@ -21,8 +21,11 @@ function setupSocketListeners() {
     });
 
     socket.on('game_ready', (data) => {
+        console.log("Game initialization packet received! Starting match...", data);
         document.getElementById('lobby-modal').classList.add('hidden');
         document.getElementById('game-container').classList.remove('hidden');
+        
+        // Dynamically assign local dashboard metrics based on your color profile
         document.getElementById('user-lbl').innerText = `You: ${myColor === 'R' ? data.r_name : data.w_name} (${myColor})`;
         document.getElementById('opponent-lbl').innerText = `Opponent: ${myColor === 'R' ? data.w_name : data.r_name} (${myColor === 'R' ? 'W' : 'R'})`;
         renderBoard(data.board);
