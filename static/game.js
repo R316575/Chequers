@@ -201,3 +201,4 @@ function showAlert(title, text) {
     document.getElementById('alert-title').innerText = title;
     document.getElementById('alert-text').innerText = text;
     document.getElementById('alert-overlay').classList.remove('hidden');
+}
