@@ -84,7 +84,8 @@ function handleTileClick(r, c) {
 
 function calculateHints(r, c) {
     // Basic dynamic highlight checks for diagonal adjacent squares
-    const directions = boardState[r][c].isupper ? [[-1,-1],[-1,1],[1,-1],[1,1]] : (myColor === 'R' ? [[-1,-1],[-1,1]] : [[1,-1],[1,1]]);
+    const isKing = boardState[r][c] === boardState[r][c].toUpperCase();
+    const directions = isKing ? [[-1,-1],[-1,1],[1,-1],[1,1]] : (myColor === 'R' ? [[-1,-1],[-1,1]] : [[1,-1],[1,1]]);
     directions.forEach(([dr, dc]) => {
         let nr = r + dr, nc = c + dc;
         if (0 <= nr && nr < 8 && 0 <= nc && nc < 8 && boardState[nr][nc] === " ") {
@@ -106,3 +107,4 @@ function showAlert(title, text) {
     document.getElementById('alert-title').innerText = title;
     document.getElementById('alert-text').innerText = text;
     document.getElementById('alert-overlay').classList.remove('hidden');
+}
