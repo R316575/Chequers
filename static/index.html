@@ -6,10 +6,10 @@
     <title>Chequers</title>
     <link rel="stylesheet" href="/static/style.css">
     
-    <!-- External Socket.IO client library (Loaded first safely) -->
-    <script src="https://cloudflare.com" defer></script>
+    <!-- Use Flask's built-in local socket library (Guaranteed to load instantly with no CDN issues) -->
+    <script src="/socket.io/socket.io.js" defer></script>
     
-    <!-- Your local game logic (Deferred to wait for libraries) -->
+    <!-- Your local game logic -->
     <script src="/static/game.js" defer></script>
 </head>
 <body>
