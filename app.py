@@ -141,6 +141,7 @@ def api_create_room():
     }
     return jsonify({'room_code': room, 'color': 'R'})
 
+# API ROUTE FOR THE SECOND PLAYER TO JOIN A ROOM
 @app.route('/api/join_room', methods=['POST'])
 def api_join_room():
     data = request.get_json() or {}
@@ -150,20 +151,24 @@ def api_join_room():
     if room in ACTIVE_GAMES:
         game_info = ACTIVE_GAMES[room]
         
-        # Check if the room is already full (maximum 2 players)
         if len(game_info['players']) >= 2:
             return jsonify({'success': False, 'error': 'Room is full!'}), 400
             
-        # Add the second player to our memory database
-        # Since HTTP is stateless, we use a temporary unique key for their session profile
         player_id = f"user_{len(game_info['players']) + 1}"
         game_info['players'][player_id] = {'name': username, 'color': 'W'}
         game_info['started'] = True
         
-        # Extract both player names safely
         p_list = list(game_info['players'].values())
         r_name = p_list[0]['name'] if len(p_list) > 0 else "Host"
         w_name = p_list[1]['name'] if len(p_list) > 1 else username
+        
+        # --- THE REAL-TIME SYNC FIX ---
+        # This tells BOTH players simultaneously via WebSockets to hide the lobby and render the board
+        socketio.emit('game_ready', {
+            'r_name': r_name,
+            'w_name': w_name,
+            'board': game_info['board'].board
+        }, to=room)
         
         return jsonify({
             'success': True,
@@ -175,7 +180,6 @@ def api_join_room():
         })
     else:
         return jsonify({'success': False, 'error': 'Invalid Room Code.'}), 400
-
 # --- SOCKET EVENTS ---
 @socketio.on('create_game')
 def on_create(data):
