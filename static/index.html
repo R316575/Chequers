@@ -40,28 +40,21 @@
     </div>
 </div>
 
-    <!-- GAMEPLAY AREA -->
-    <div id="game-container" class="hidden">
-        <div class="player-label" id="opponent-lbl">Opponent Name: -- [Score Tracking Logs]</div>
-        <div id="captured-by-red" class="capture-zone"></div>
-        
-        <!-- THE DIAGNOSTIC CHECKERS BOARD -->
-        <div id="checkers-board"></div>
-        
-        <div id="captured-by-white" class="capture-zone"></div>
-        <div class="player-label" id="user-lbl">Your Name: --</div>
-        
-        <!-- ACCESSIBLE UTILITIES PANEL -->
-        <div id="controls-panel">
-            <div id="turn-indicator">Turn: Red</div>
-            <label class="switch">
-                <input type="checkbox" id="hints-toggle" checked>
-                <span class="slider"></span>
-            </label>
-            <span>Show Hints Mode</span>
-            <button id="extra-time-btn">Request Extra Time</button>
-        </div>
-    </div>
+<!-- GAMEPLAY AREA -->
+<div id="game-container" class="hidden">
+    <div class="player-label" id="opponent-lbl">Opponent Name: -- [Score Tracking Logs]</div>
+    
+    <!-- TOP TRACK: White's zone (Displays Red pieces White has captured) -->
+    <div id="captured-by-white" class="capture-zone"></div>
+    
+    <!-- THE DIAGNOSTIC CHECKERS BOARD -->
+    <div id="checkers-board"></div>
+    
+    <!-- BOTTOM TRACK: Red's zone (Displays White pieces Red has captured) -->
+    <div id="captured-by-red" class="capture-zone"></div>
+    
+    <div class="player-label" id="user-lbl">Your Name: --</div>
+</div>
 
     <!-- GENERAL ALERT DIALOGS (DISCONNECTIONS, ERROR LOGS, WINNERS) -->
     <div id="alert-overlay" class="modal hidden">
