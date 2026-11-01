@@ -40,18 +40,55 @@ function setupSocketListeners() {
 
 // 4. BUTTON CLICK HANDLERS
 function setupUserInterface() {
-    document.getElementById('btn-create').addEventListener('click', () => {
-        const user = document.getElementById('username-input').value || "Player 1";
-        socket.emit('create_game', { username: user });
-    });
+    const createBtn = document.getElementById('btn-create');
+    console.log("Checking create button element:", createBtn);
 
-    document.getElementById('btn-join').addEventListener('click', () => {
-        const user = document.getElementById('username-input').value || "Player 2";
-        const code = document.getElementById('join-code-input').value.toUpperCase();
-        socket.emit('join_game', { username: user, room_code: code });
-    });
+    if (createBtn) {
+        createBtn.addEventListener('click', () => {
+            console.log("Create Private Room button successfully clicked!");
+            const user = document.getElementById('username-input').value || "Player 1";
+            
+            fetch('/api/create_room', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: user })
+            })
+            .then(response => {
+                console.log("Server responded with HTTP status:", response.status);
+                return response.json();
+            })
+            .then(data => {
+                console.log("Room payload received from API:", data);
+                roomCode = data.room_code;
+                myColor = data.color;
+                document.getElementById('display-code').innerText = roomCode;
+                showAlert("Room Created", `Share Code: ${roomCode}. Waiting for your opponent.`);
+                
+                // Automatically registers the host's websocket session to the backend
+                socket.emit('join_game', { username: user, room_code: roomCode });
+            })
+            .catch(err => {
+                console.error("Server API mismatch error logs:", err);
+                showAlert("Connection Error", "Could not create a private room on the server.");
+            });
+        });
+    } else {
+        console.error("CRITICAL UI ERROR: Could not find HTML element with ID 'btn-create'!");
+    }
+
+    // Join room button setup
+    const joinBtn = document.getElementById('btn-join');
+    if (joinBtn) {
+        joinBtn.addEventListener('click', () => {
+            const user = document.getElementById('username-input').value || "Player 2";
+            const code = document.getElementById('join-code-input').value.toUpperCase();
+            console.log(`Attempting to join room: ${code} as user: ${user}`);
+            if (socket) {
+                socket.emit('join_game', { username: user, room_code: code });
+            }
+        });
+    }
 }
-
 // 5. CHEQUERS RENDERING ENGINE
 function renderBoard(board) {
     boardState = board;
