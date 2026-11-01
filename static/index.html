@@ -5,64 +5,61 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chequers</title>
     <link rel="stylesheet" href="/static/style.css">
-    
-    <script src="/static/socket.io.min.js"></script>
-    <script src="/static/game.js"></script>
 </head>
 <body>
     <!-- HEADER CONTROLS -->
-    <div id="top-bar">
-        <button id="menu-btn">&#x2630; MENU</button>
-        <div id="room-banner">Room Code: <span id="display-code">-----</span></div>
+    <div id="top-bar" style="width: 100%; max-width: 600px; display: flex; justify-content: space-between; align-items: center; padding: 10px; background: #e3dec3; box-sizing: border-box;">
+        <button id="menu-btn" style="padding: 5px 10px; cursor: pointer;">&#x2630; MENU</button>
+        <div id="turn-indicator" style="font-weight: bold;">Turn: Red</div>
+        <div id="room-banner" style="font-weight: bold;">Room Code: <span id="display-code">-----</span></div>
     </div>
 
-    <!-- COLLAPSIBLE OVERLAY SIDE MENU -->
-    <div id="side-menu" class="hidden">
-        <button id="close-menu-btn">X</button>
-        <button id="lobby-nav-btn">MULTIPLAYER LOBBY</button>
-        <button id="rules-nav-btn">HOW TO PLAY</button>
-    </div>
-
-<!-- MULTIPLAYER LOBBY WINDOW SCREEN -->
-<div id="lobby-modal" class="modal">
-    <div class="modal-content">
-        <h2>Chequers Lobby</h2>
-        <!-- Input for user name -->
-        <input type="text" id="username-input" placeholder="Username (max 12 chars)" maxlength="12">
-        <hr>
-        <!-- The button ID must be exactly btn-create -->
-        <button id="btn-create">Create a Private Room</button>
-        <p>OR</p>
-        <!-- Input for room code -->
-        <input type="text" id="join-code-input" placeholder="Enter Room Code">
-        <!-- The button ID must be exactly btn-join -->
-        <button id="btn-join">Join Room</button>
-    </div>
-</div>
-
-<!-- GAMEPLAY AREA -->
-<div id="game-container" class="hidden">
-    <div class="player-label" id="opponent-lbl">Opponent Name: -- [Score Tracking Logs]</div>
-    
-    <!-- TOP TRACK: White's zone (Displays Red pieces White has captured) -->
-    <div id="captured-by-white" class="capture-zone"></div>
-    
-    <!-- THE DIAGNOSTIC CHECKERS BOARD -->
-    <div id="checkers-board"></div>
-    
-    <!-- BOTTOM TRACK: Red's zone (Displays White pieces Red has captured) -->
-    <div id="captured-by-red" class="capture-zone"></div>
-    
-    <div class="player-label" id="user-lbl">Your Name: --</div>
-</div>
-
-    <!-- GENERAL ALERT DIALOGS (DISCONNECTIONS, ERROR LOGS, WINNERS) -->
-    <div id="alert-overlay" class="modal hidden">
-        <div class="modal-content" id="alert-box">
-            <h3 id="alert-title">Notification</h3>
-            <p id="alert-text"></p>
-            <button id="alert-close-btn" onclick="document.getElementById('alert-overlay').classList.add('hidden')">Close</button>
+    <!-- MULTIPLAYER LOBBY WINDOW SCREEN -->
+    <div id="lobby-modal" class="modal">
+        <div class="modal-content" style="background: #fffcf2; padding: 25px; border-radius: 4px; text-align: center; border: 3px solid #2b593f;">
+            <h2>Chequers Lobby</h2>
+            <input type="text" id="username-input" placeholder="Username (max 12 chars)" maxlength="12" style="padding: 8px; width: 80%; margin-bottom: 15px;">
+            <hr style="border: 0; border-top: 1px solid #ccc; margin: 15px 0;">
+            <button id="btn-create" style="padding: 10px 20px; font-weight: bold; background: #2b593f; color: white; border: none; border-radius: 4px; cursor: pointer; width: 85%;">Create a Private Room</button>
+            <p style="margin: 15px 0; font-weight: bold;">OR</p>
+            <input type="text" id="join-code-input" placeholder="Enter Room Code" style="padding: 8px; width: 80%; margin-bottom: 10px; text-transform: uppercase;">
+            <button id="btn-join" style="padding: 10px 20px; font-weight: bold; background: #b01b1b; color: white; border: none; border-radius: 4px; cursor: pointer; width: 85%;">Join Room</button>
         </div>
     </div>
+
+    <!-- GAMEPLAY AREA -->
+    <div id="game-container" class="hidden" style="margin-top: 20px; text-align: center;">
+        <div class="player-label" id="opponent-lbl" style="font-weight: bold; margin-bottom: 5px;">Opponent: --</div>
+        
+        <!-- TOP TRACK (White Zone) -->
+        <div id="captured-by-white" class="capture-zone" style="min-height: 25px; margin-bottom: 5px;"></div>
+        
+        <!-- THE DIAGNOSTIC CHECKERS BOARD -->
+        <div id="checkers-board" style="display: grid; grid-template-columns: repeat(8, 1fr); grid-template-rows: repeat(8, 1fr); width: 90vw; height: 90vw; max-width: 480px; max-height: 480px; border: 4px solid #4a3c31; background-color: #2b593f; box-sizing: border-box;"></div>
+        
+        <!-- BOTTOM TRACK (Red Zone) -->
+        <div id="captured-by-red" class="capture-zone" style="min-height: 25px; margin-top: 5px;"></div>
+        
+        <div class="player-label" id="user-lbl" style="font-weight: bold; margin-top: 5px;">You: --</div>
+        
+        <!-- ACCESSIBLE UTILITIES PANEL -->
+        <div id="controls-panel" style="margin-top: 15px; display: flex; justify-content: center; align-items: center; gap: 10px;">
+            <label style="cursor: pointer; display: flex; align-items: center; gap: 5px;">
+                <input type="checkbox" id="hints-toggle" checked>
+                <span>Show Hints Mode</span>
+            </label>
+        </div>
+    </div>
+
+    <!-- GENERAL ALERT DIALOGS -->
+    <div id="alert-overlay" class="modal hidden" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: flex; justify-content: center; align-items: center; z-index: 100;">
+        <div class="modal-content" style="background: #fffcf2; padding: 25px; border-radius: 4px; text-align: center; border: 3px solid #b01b1b; max-width: 300px;">
+            <h3 id="alert-title">Notification</h3>
+            <p id="alert-text"></p>
+            <button id="alert-close-btn" style="padding: 5px 15px; cursor: pointer;" onclick="document.getElementById('alert-overlay').classList.add('hidden')">Close</button>
+        </div>
+    </div>
+
+    <script src="/static/game.js"></script>
 </body>
 </html>
