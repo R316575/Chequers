@@ -22,13 +22,24 @@ function setupSocketListeners() {
     });
 
     socket.on('game_ready', (data) => {
-        console.log("Game initialization packet received! Starting match...", data);
-        document.getElementById('lobby-modal').classList.add('hidden');
-        document.getElementById('game-container').classList.remove('hidden');
+        console.log("Global game packet detected:", data);
         
-        document.getElementById('user-lbl').innerText = `You: ${myColor === 'R' ? data.r_name : data.w_name} (${myColor})`;
-        document.getElementById('opponent-lbl').innerText = `Opponent: ${myColor === 'R' ? data.w_name : data.r_name} (${myColor === 'R' ? 'W' : 'R'})`;
-        renderBoard(data.board);
+        // Match filtering check: Only trigger layout change if this notification matches our active room
+        if (data.room_code === roomCode) {
+            console.log("Match verified! Synchronizing board screens...");
+            
+            // Close the alert popup notice if it's currently blocking the interface view
+            document.getElementById('alert-overlay').classList.add('hidden');
+            
+            // Swap display states to uncover the board layout
+            document.getElementById('lobby-modal').classList.add('hidden');
+            document.getElementById('game-container').classList.remove('hidden');
+            
+            // Set user metrics
+            document.getElementById('user-lbl').innerText = `You: ${myColor === 'R' ? data.r_name : data.w_name} (${myColor})`;
+            document.getElementById('opponent-lbl').innerText = `Opponent: ${myColor === 'R' ? data.w_name : data.r_name} (${myColor === 'R' ? 'W' : 'R'})`;
+            renderBoard(data.board);
+        }
     });
 
     socket.on('update_board', (data) => {
