@@ -98,7 +98,7 @@ function setupUserInterface() {
     });
 }
 
-// 5. CHEQUERS RENDERING ENGINE
+// 5. CHEQUERS RENDERING ENGINE (With state-preserving highlights)
 function renderBoard(board) {
     boardState = board;
     const boardDiv = document.getElementById('checkers-board');
@@ -116,12 +116,23 @@ function renderBoard(board) {
                 const p = document.createElement('div');
                 p.className = `piece ${val.toUpperCase() === 'R' ? 'red-p' : 'white-p'}`;
                 if (val === "R" || val === "W") p.innerHTML = "&#x2654;";
+                
+                // RESTORE SELECTION CLASS: If this piece was previously selected, keep it lit
+                if (selectedTile && selectedTile.r === r && selectedTile.c === c) {
+                    p.classList.add('selected-piece');
+                }
+                
                 tile.appendChild(p);
             }
 
             tile.addEventListener('click', () => handleTileClick(r, c));
             boardDiv.appendChild(tile);
         }
+    }
+
+    // RESTORE HINT HIGHLIGHTS: If a piece is selected and hints are enabled, re-calculate them instantly
+    if (selectedTile && document.getElementById('hints-toggle').checked) {
+        calculateHints(selectedTile.r, selectedTile.c);
     }
 }
 
