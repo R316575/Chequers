@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chequers</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <script src="https://socket.io"></script>
+</head>
+<body>
+    <!-- HEADER CONTROLS -->
+    <div id="top-bar">
+        <button id="menu-btn">&#x2630; MENU</button>
+        <div id="room-banner">Room Code: <span id="display-code">-----</span></div>
+    </div>
+
+    <!-- COLLAPSIBLE OVERLAY SIDE MENU -->
+    <div id="side-menu" class="hidden">
+        <button id="close-menu-btn">X</button>
+        <button id="lobby-nav-btn">MULTIPLAYER LOBBY</button>
+        <button id="rules-nav-btn">HOW TO PLAY</button>
+    </div>
+
+    <!-- MULTIPLAYER LOBBY WINDOW SCREEN -->
+    <div id="lobby-modal" class="modal">
+        <div class="modal-content">
+            <h2>Chequers Lobby</h2>
+            <input type="text" id="username-input" placeholder="Username (max 12 chars)" maxlength="12">
+            <hr>
+            <button id="btn-create">Create a Private Room</button>
+            <p>OR</p>
+            <input type="text" id="join-code-input" placeholder="Enter Room Code">
+            <button id="btn-join">Join Room</button>
+        </div>
+    </div>
+
+    <!-- GAMEPLAY AREA -->
+    <div id="game-container" class="hidden">
+        <div class="player-label" id="opponent-lbl">Opponent Name: -- [Score Tracking Logs]</div>
+        <div id="captured-by-red" class="capture-zone"></div>
+        
+        <!-- THE DIAGNOSTIC CHECKERS BOARD -->
+        <div id="checkers-board"></div>
+        
+        <div id="captured-by-white" class="capture-zone"></div>
+        <div class="player-label" id="user-lbl">Your Name: --</div>
+        
+        <!-- ACCESSIBLE UTILITIES PANEL -->
+        <div id="controls-panel">
+            <div id="turn-indicator">Turn: Red</div>
+            <label class="switch">
+                <input type="checkbox" id="hints-toggle" checked>
+                <span class="slider"></span>
+            </label>
+            <span>Show Hints Mode</span>
+            <button id="extra-time-btn">Request Extra Time</button>
+        </div>
+    </div>
+
+    <!-- GENERAL ALERT DIALOGS (DISCONNECTIONS, ERROR LOGS, WINNERS) -->
+    <div id="alert-overlay" class="modal hidden">
+        <div class="modal-content" id="alert-box">
+            <h3 id="alert-title">Notification</h3>
+            <p id="alert-text"></p>
+            <button id="alert-close-btn" onclick="document.getElementById('alert-overlay').classList.add('hidden')">Close</button>
+        </div>
+    </div>
+
+    <script src="/static/game.js"></script>
+</body>
+</html>
