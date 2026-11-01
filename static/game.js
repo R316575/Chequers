@@ -23,17 +23,13 @@ function startGameStatePolling() {
             return response.json();
         })
         .then(data => {
-            // ALWAYS render the current board matrix layout so it never shows a blank screen
             renderBoard(data.board);
             updateCaptureZones(data.r_score || 0, data.w_score || 0);
             document.getElementById('turn-indicator').innerText = `Turn: ${data.turn === 'R' ? 'Red' : 'White'}`;
             
             const codeHeader = document.getElementById('display-code');
-            if (codeHeader) {
-                codeHeader.innerText = roomCode;
-            }
+            if (codeHeader) { codeHeader.innerText = roomCode; }
 
-            // Transition user interface screens only when an opponent enters
             if (data.started) {
                 document.getElementById('alert-overlay').classList.add('hidden');
                 document.getElementById('lobby-modal').classList.add('hidden');
@@ -58,7 +54,6 @@ function setupUserInterface() {
     if (createBtn) {
         createBtn.addEventListener('click', () => {
             const user = document.getElementById('username-input').value || "Player 1";
-            
             fetch('/api/create_room', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -70,13 +65,9 @@ function setupUserInterface() {
                 myColor = data.color;
                 document.getElementById('display-code').innerText = roomCode;
                 showAlert("Room Created", `Share Code: ${roomCode}. Waiting for your opponent.`);
-                
                 startGameStatePolling();
             })
-            .catch(err => {
-                console.error("Create room error:", err);
-                showAlert("Connection Error", "Could not create room.");
-            });
+            .catch(err => showAlert("Connection Error", "Could not create room."));
         });
     }
 
@@ -98,17 +89,11 @@ function setupUserInterface() {
             .then(data => {
                 roomCode = code;
                 myColor = data.color;
-                
                 document.getElementById('lobby-modal').classList.add('hidden');
                 document.getElementById('game-container').classList.remove('hidden');
-                
-                renderBoard(boardState);
                 startGameStatePolling();
             })
-            .catch(err => {
-                console.error("Join room error:", err);
-                showAlert("Lobby Join Error", err.message);
-            });
+            .catch(err => showAlert("Lobby Join Error", err.message));
         });
     }
 }
@@ -136,10 +121,8 @@ function renderBoard(board) {
                 if (selectedTile && selectedTile.r === r && selectedTile.c === c) {
                     p.classList.add('selected-piece');
                 }
-                
                 tile.appendChild(p);
             }
-
             tile.addEventListener('click', () => handleTileClick(r, c));
             boardDiv.appendChild(tile);
         }
@@ -159,7 +142,6 @@ function handleTileClick(r, c) {
         selectedTile = { r, c };
         const pieceEl = document.querySelector(`[data-row="${r}"][data-col="${c}"] .piece`);
         if (pieceEl) pieceEl.classList.add('selected-piece');
-        if (document.getElementById('hints-toggle') && document.getElementById('hints-toggle').checked) calculateHints(r, c);
     } else if (selectedTile !== null) {
         fetch('/api/make_move', {
             method: 'POST',
@@ -170,8 +152,7 @@ function handleTileClick(r, c) {
         .then(data => {
             if (data.error) showAlert("Move Validation Warning", data.error);
             selectedTile = null;
-        })
-        .catch(err => console.error("Move error:", err));
+        });
     }
 }
 
@@ -198,7 +179,6 @@ function updateCaptureZones(rScore, wScore) {
             redZone.innerHTML += '<span style="display:inline-block; width:16px; height:16px; background:#ffffff; border:1px solid #a8a8a8; border-radius:50%; margin:2px;"></span>';
         }
     }
-    
     if (whiteZone) {
         whiteZone.innerHTML = '';
         for (let i = 0; i < wScore; i++) {
@@ -207,6 +187,7 @@ function updateCaptureZones(rScore, wScore) {
     }
 }
 
+// Global Custom Alert Dialogue Engine
 function showAlert(title, text) {
     const overlay = document.getElementById('alert-overlay');
     const titleEl = document.getElementById('alert-title');
