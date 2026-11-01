@@ -1,39 +1,63 @@
-const socket = io();
+// 1. GLOBAL VARIABLES & STATE (Always at the very top)
+let socket;
 let roomCode = null;
 let myColor = null;
 let selectedTile = null;
 let boardState = [];
 
-// DOM Reference mappings
-const lobbyModal = document.getElementById('lobby-modal');
-const gameContainer = document.getElementById('game-container');
-
-document.getElementById('btn-create').addEventListener('click', () => {
-    const user = document.getElementById('username-input').value || "Player 1";
-    socket.emit('create_game', { username: user });
+// 2. INITIALIZATION (Runs as soon as the browser page loads safely)
+document.addEventListener("DOMContentLoaded", () => {
+    socket = io();
+    
+    // Set up real-time network listener triggers
+    setupSocketListeners();
+    
+    // Set up user interface button click handlers
+    setupUserInterface();
 });
 
-document.getElementById('btn-join').addEventListener('click', () => {
-    const user = document.getElementById('username-input').value || "Player 2";
-    const code = document.getElementById('join-code-input').value.toUpperCase();
-    socket.emit('join_game', { username: user, room_code: code });
-});
+// 3. NETWORK LISTENERS
+function setupSocketListeners() {
+    socket.on('room_created', (data) => {
+        roomCode = data.room_code;
+        myColor = data.color;
+        document.getElementById('display-code').innerText = roomCode;
+        showAlert("Room Created", `Share Code: ${roomCode}. Waiting for your opponent.`);
+    });
 
-socket.on('room_created', (data) => {
-    roomCode = data.room_code;
-    myColor = data.color;
-    document.getElementById('display-code').innerText = roomCode;
-    showAlert("Room Created", `Share Code: ${roomCode}. Waiting for your opponent.`);
-});
+    socket.on('game_ready', (data) => {
+        document.getElementById('lobby-modal').classList.add('hidden');
+        document.getElementById('game-container').classList.remove('hidden');
+        document.getElementById('user-lbl').innerText = `You: ${myColor === 'R' ? data.r_name : data.w_name} (${myColor})`;
+        document.getElementById('opponent-lbl').innerText = `Opponent: ${myColor === 'R' ? data.w_name : data.r_name} (${myColor === 'R' ? 'W' : 'R'})`;
+        renderBoard(data.board);
+    });
 
-socket.on('game_ready', (data) => {
-    lobbyModal.classList.add('hidden');
-    gameContainer.classList.remove('hidden');
-    document.getElementById('user-lbl').innerText = `You: ${myColor === 'R' ? data.r_name : data.w_name} (${myColor})`;
-    document.getElementById('opponent-lbl').innerText = `Opponent: ${myColor === 'R' ? data.w_name : data.r_name} (${myColor === 'R' ? 'W' : 'R'})`;
-    renderBoard(data.board);
-});
+    socket.on('update_board', (data) => {
+        renderBoard(data.board);
+        document.getElementById('turn-indicator').innerText = `Turn: ${data.turn === 'R' ? 'Red' : 'White'}`;
+        if (data.winner) showAlert("Game Over!", `${data.winner} Wins the match!`);
+    });
 
+    socket.on('error_msg', (msg) => showAlert("Move Validation Error", msg));
+    socket.on('connection_lost', () => showAlert("Connection Dropped", "Opponent disconnected. Room will terminate in 30s."));
+}
+
+// 4. BUTTON CLICK HANDLERS
+function setupUserInterface() {
+    document.getElementById('btn-create').addEventListener('click', () => {
+        const user = document.getElementById('username-input').value || "Player 1";
+        socket.emit('create_game', { username: user });
+    });
+
+    document.getElementById('btn-join').addEventListener('click', () => {
+        const user = document.getElementById('username-input').value || "Player 2";
+        const code = document.getElementById('join-code-input').value.toUpperCase();
+        socket.emit('join_game', { username: user, room_code: code });
+    });
+}
+
+// 5. CHEQUERS RENDERING ENGINE
 function renderBoard(board) {
     boardState = board;
     const boardDiv = document.getElementById('checkers-board');
@@ -50,7 +74,6 @@ function renderBoard(board) {
             if (val !== " ") {
                 const p = document.createElement('div');
                 p.className = `piece ${val.toUpperCase() === 'R' ? 'red-p' : 'white-p'}`;
-                // Crown overlay validation utilizing Unicode U+2654
                 if (val === "R" || val === "W") p.innerHTML = "&#x2654;";
                 tile.appendChild(p);
             }
@@ -61,6 +84,7 @@ function renderBoard(board) {
     }
 }
 
+// 6. PIECE MOVEMENT SELECTION MATRIX
 function handleTileClick(r, c) {
     const clickedVal = boardState[r][c];
     
@@ -71,19 +95,17 @@ function handleTileClick(r, c) {
             if (document.getElementById('hints-toggle').checked) calculateHints(r, c);
         }
     } else {
-        // Dispatch coordinates back directly to the validated python logic layer
         socket.emit('make_move', {
             room_code: roomCode,
             r: selectedTile.r, c: selectedTile.c,
             nr: r, nc: c
         });
         selectedTile = null;
-        renderBoard(boardState); // clear tracking classes
+        renderBoard(boardState); 
     }
 }
 
 function calculateHints(r, c) {
-    // Basic dynamic highlight checks for diagonal adjacent squares
     const isKing = boardState[r][c] === boardState[r][c].toUpperCase();
     const directions = isKing ? [[-1,-1],[-1,1],[1,-1],[1,1]] : (myColor === 'R' ? [[-1,-1],[-1,1]] : [[1,-1],[1,1]]);
     directions.forEach(([dr, dc]) => {
@@ -93,15 +115,6 @@ function calculateHints(r, c) {
         }
     });
 }
-
-socket.on('update_board', (data) => {
-    renderBoard(data.board);
-    document.getElementById('turn-indicator').innerText = `Turn: ${data.turn === 'R' ? 'Red' : 'White'}`;
-    if (data.winner) showAlert("Game Over!", `${data.winner} Wins the match!`);
-});
-
-socket.on('error_msg', (msg) => showAlert("Move Validation Error", msg));
-socket.on('connection_lost', () => showAlert("Connection Dropped", "Opponent disconnected. Room will terminate in 30s."));
 
 function showAlert(title, text) {
     document.getElementById('alert-title').innerText = title;
