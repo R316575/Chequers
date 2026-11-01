@@ -143,7 +143,7 @@ function updateCaptureZones(rScore, wScore) {
     const whiteZone = document.getElementById('captured-by-white');
     
     if (redZone) {
-        // Red score tracking counts how many White counters Red has jumped
+        // RED SIDE (BOTTOM): Displays the White tokens that Red has captured
         redZone.innerHTML = '';
         for (let i = 0; i < rScore; i++) {
             redZone.innerHTML += '<span style="display:inline-block; width:16px; height:16px; background:#ffffff; border:1px solid #a8a8a8; border-radius:50%; margin:2px;"></span>';
@@ -151,7 +151,7 @@ function updateCaptureZones(rScore, wScore) {
     }
     
     if (whiteZone) {
-        // White score tracking counts how many Red counters White has jumped
+        // WHITE SIDE (TOP): Displays the Red tokens that White has captured
         whiteZone.innerHTML = '';
         for (let i = 0; i < wScore; i++) {
             whiteZone.innerHTML += '<span style="display:inline-block; width:16px; height:16px; background:#b01b1b; border:1px solid #540606; border-radius:50%; margin:2px;"></span>';
