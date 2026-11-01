@@ -79,19 +79,44 @@ function setupUserInterface() {
         console.error("CRITICAL UI ERROR: Could not find HTML element with ID 'btn-create'!");
     }
 
-    // Join room button setup
+   // Upgraded join room button handler using stable HTTP POST requests
     const joinBtn = document.getElementById('btn-join');
     if (joinBtn) {
         joinBtn.addEventListener('click', () => {
             const user = document.getElementById('username-input').value || "Player 2";
             const code = document.getElementById('join-code-input').value.toUpperCase();
-            console.log(`Attempting to join room: ${code} as user: ${user}`);
-            if (socket) {
-                socket.emit('join_game', { username: user, room_code: code });
-            }
+            console.log(`Attempting to join room: ${code} via HTTP API as user: ${user}`);
+            
+            fetch('/api/join_room', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: user, room_code: code })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(err => { throw new Error(err.error); });
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log("Successfully joined room! Payload:", data);
+                roomCode = data.room_code;
+                myColor = data.color;
+                
+                // Hide lobby modal and bring up your tournament board layout
+                document.getElementById('lobby-modal').classList.add('hidden');
+                document.getElementById('game-container').classList.remove('hidden');
+                
+                document.getElementById('user-lbl').innerText = `You: ${data.w_name} (W)`;
+                document.getElementById('opponent-lbl').innerText = `Opponent: ${data.r_name} (R)`;
+                renderBoard(data.board);
+            })
+            .catch(err => {
+                console.error("Join room error:", err);
+                showAlert("Lobby Join Error", err.message || "Could not connect to the match room.");
+            });
         });
     }
-}
 // 5. CHEQUERS RENDERING ENGINE
 function renderBoard(board) {
     boardState = board;
