@@ -5,7 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chequers</title>
     <link rel="stylesheet" href="/static/style.css">
-    <script src="https://socket.io"></script>
+    
+    <!-- External Socket.IO client library (Loaded first safely) -->
+    <script src="https://cloudflare.com" defer></script>
+    
+    <!-- Your local game logic (Deferred to wait for libraries) -->
+    <script src="/static/game.js" defer></script>
 </head>
 <body>
     <!-- HEADER CONTROLS -->
