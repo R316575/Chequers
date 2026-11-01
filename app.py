@@ -182,10 +182,11 @@ def api_get_game_state():
             'r_name': r_name,
             'w_name': w_name,
             'board': board_obj.board,
+            'r_score': board_obj.r_score,  # Tracks captured white pieces
+            'w_score': board_obj.w_score,  # Tracks captured red pieces
             'winner': winner
         })
     return jsonify({'error': 'Invalid Room Code'}), 404
-
 
 # 4. HTTP ROUTE: MAKE MOVE PLACEMENTS
 @app.route('/api/make_move', methods=['POST'])
