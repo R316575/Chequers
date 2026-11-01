@@ -166,7 +166,7 @@ def on_join(data):
     if room in ACTIVE_GAMES:
         game_info = ACTIVE_GAMES[room]
         
-        # Check if the room is already full
+        # Guard against third parties jumping into an full active pair matching setup
         if len(game_info['players']) >= 2 and request.sid not in game_info['players']:
             emit('error_msg', 'Room is full!')
             return
@@ -178,15 +178,15 @@ def on_join(data):
             game_info['players'][request.sid] = {'name': username, 'color': 'R'}
             emit('room_created', {'room_code': room, 'color': 'R'})
             
-        # Scenario B: Second peer is joining the game room
+        # Scenario B: Second peer (like Pat) is joining the game room layout
         elif len(game_info['players']) == 1 and request.sid not in game_info['players']:
             game_info['players'][request.sid] = {'name': username, 'color': 'W'}
             game_info['started'] = True
             
-            # Extract both verified player profiles from the room database safely
+            # SAFE ARRAY CONVERSION FIX: Convert player profiles map dictionary values to a indexed array list safely
             p_list = list(game_info['players'].values())
             
-            # Broadcast configuration details to both peers to seamlessly drop the modal screen
+            # Explicitly reference indices 0 and 1 to prevent Python server type error crashes
             emit('game_ready', {
                 'r_name': p_list[0]['name'], 
                 'w_name': p_list[1]['name'], 
