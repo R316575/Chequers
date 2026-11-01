@@ -123,11 +123,6 @@ class Board:
 # --- HTTP ROUTES ---
 @app.route('/')
 def index():
-    return render_template('index.html')
-
-# NEW COMPATIBILITY ROUTE FOR PRIVATE ROOMS
-@app.route('/')
-def index():
     # Serves the single page application HTML
     return render_template('index.html')
 
