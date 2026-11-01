@@ -98,7 +98,7 @@ function setupUserInterface() {
     });
 }
 
-// 5. CHEQUERS RENDERING ENGINE (With state-preserving highlights)
+// 5. CHEQUERS RENDERING ENGINE (With state preservation and side panel capture tracking)
 function renderBoard(board) {
     boardState = board;
     const boardDiv = document.getElementById('checkers-board');
@@ -117,7 +117,6 @@ function renderBoard(board) {
                 p.className = `piece ${val.toUpperCase() === 'R' ? 'red-p' : 'white-p'}`;
                 if (val === "R" || val === "W") p.innerHTML = "&#x2654;";
                 
-                // RESTORE SELECTION CLASS: If this piece was previously selected, keep it lit
                 if (selectedTile && selectedTile.r === r && selectedTile.c === c) {
                     p.classList.add('selected-piece');
                 }
@@ -130,9 +129,30 @@ function renderBoard(board) {
         }
     }
 
-    // RESTORE HINT HIGHLIGHTS: If a piece is selected and hints are enabled, re-calculate them instantly
     if (selectedTile && document.getElementById('hints-toggle').checked) {
         calculateHints(selectedTile.r, selectedTile.c);
+    }
+}
+
+// NEW SIDE PANEL TRACKING FUNCTION: Renders circles representing captured game pieces
+function updateCaptureZones(rScore, wScore) {
+    const redZone = document.getElementById('captured-by-red');
+    const whiteZone = document.getElementById('captured-by-white');
+    
+    if (redZone) {
+        // Red score tracking counts how many White counters Red has jumped
+        redZone.innerHTML = '';
+        for (let i = 0; i < rScore; i++) {
+            redZone.innerHTML += '<span style="display:inline-block; width:16px; height:16px; background:#ffffff; border:1px solid #a8a8a8; border-radius:50%; margin:2px;"></span>';
+        }
+    }
+    
+    if (whiteZone) {
+        // White score tracking counts how many Red counters White has jumped
+        whiteZone.innerHTML = '';
+        for (let i = 0; i < wScore; i++) {
+            whiteZone.innerHTML += '<span style="display:inline-block; width:16px; height:16px; background:#b01b1b; border:1px solid #540606; border-radius:50%; margin:2px;"></span>';
+        }
     }
 }
 
