@@ -10,7 +10,7 @@ document.addEventListener("DOMContentLoaded", () => {
     setupUserInterface();
 });
 
-// 3. AUTOMATIC SYNC POLLING LOOP (Error-Proof Version)
+// 3. AUTOMATIC SYNC POLLING LOOP
 function startGameStatePolling() {
     if (pollingInterval) clearInterval(pollingInterval);
     
@@ -24,16 +24,13 @@ function startGameStatePolling() {
         })
         .then(data => {
             if (data.started) {
-                // Ensure layout states hide login screens
                 document.getElementById('alert-overlay').classList.add('hidden');
                 document.getElementById('lobby-modal').classList.add('hidden');
                 document.getElementById('game-container').classList.remove('hidden');
                 
-                // Assign labels based on player identities
                 document.getElementById('user-lbl').innerText = `You: ${myColor === 'R' ? data.r_name : data.w_name} (${myColor})`;
                 document.getElementById('opponent-lbl').innerText = `Opponent: ${myColor === 'R' ? data.w_name : data.r_name} (${myColor === 'R' ? 'W' : 'R'})`;
                 
-                // Synchronize header components safely
                 document.getElementById('turn-indicator').innerText = `Turn: ${data.turn === 'R' ? 'Red' : 'White'}`;
                 
                 const codeHeader = document.getElementById('display-code');
@@ -41,11 +38,8 @@ function startGameStatePolling() {
                     codeHeader.innerText = roomCode;
                 }
                 
-                // Re-render game boards and captured tracking zones
                 renderBoard(data.board);
-                if (typeof updateCaptureZones === 'function') {
-                    updateCaptureZones(data.r_score || 0, data.w_score || 0);
-                }
+                updateCaptureZones(data.r_score || 0, data.w_score || 0);
                 
                 if (data.winner) {
                     showAlert("Game Over!", `${data.winner} Wins the match!`);
@@ -59,35 +53,37 @@ function startGameStatePolling() {
 
 // 4. BUTTON CLICK HANDLERS
 function setupUserInterface() {
-    // Create Room
-    document.getElementById('btn-create').addEventListener('click', () => {
-        const user = document.getElementById('username-input').value || "Player 1";
-        
-        fetch('/api/create_room', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username: user })
-        })
-        .then(response => response.json())
-        .then(data => {
-            roomCode = data.room_code;
-            myColor = data.color;
-            document.getElementById('display-code').innerText = roomCode;
-            showAlert("Room Created", `Share Code: ${roomCode}. Waiting for your opponent.`);
+    const createBtn = document.getElementById('btn-create');
+    if (createBtn) {
+        createBtn.addEventListener('click', () => {
+            const user = document.getElementById('username-input').value || "Player 1";
             
-            // Instantly start checking for the second player
-            startGameStatePolling();
-        })
-        .catch(err => showAlert("Connection Error", "Could not create room."));
-    });
+            fetch('/api/create_room', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: user })
+            })
+            .then(response => response.json())
+            .then(data => {
+                roomCode = data.room_code;
+                myColor = data.color;
+                document.getElementById('display-code').innerText = roomCode;
+                showAlert("Room Created", `Share Code: ${roomCode}. Waiting for your opponent.`);
+                
+                startGameStatePolling();
+            })
+            .catch(err => {
+                console.error("Create room error:", err);
+                showAlert("Connection Error", "Could not create room.");
+            });
+        });
+    }
 
-    // Join Room handler configuration
     const joinBtn = document.getElementById('btn-join');
     if (joinBtn) {
         joinBtn.addEventListener('click', () => {
             const user = document.getElementById('username-input').value || "Player 2";
             const code = document.getElementById('join-code-input').value.toUpperCase();
-            console.log(`Attempting to join room: ${code} via HTTP API as user: ${user}`);
             
             fetch('/api/join_room', {
                 method: 'POST',
@@ -99,33 +95,28 @@ function setupUserInterface() {
                 return response.json();
             })
             .then(data => {
-                console.log("Successfully joined room! Payload:", data);
-                
-                // CRITICAL FIX: Save the active code parameters into local browser memory
-                roomCode = code; 
+                roomCode = code;
                 myColor = data.color;
                 
                 document.getElementById('lobby-modal').classList.add('hidden');
                 document.getElementById('game-container').classList.remove('hidden');
                 
-                document.getElementById('user-lbl').innerText = `You: ${data.w_name} (W)`;
-                document.getElementById('opponent-lbl').innerText = `Opponent: ${data.r_name} (R)`;
-                renderBoard(data.board);
-                
-                // Launch background polling sync updates now that roomCode is set
+                renderBoard(boardState);
                 startGameStatePolling();
             })
             .catch(err => {
                 console.error("Join room error:", err);
-                showAlert("Lobby Join Error", err.message || "Could not connect to the match room.");
+                showAlert("Lobby Join Error", err.message);
             });
         });
     }
+}
 
-// 5. CHEQUERS RENDERING ENGINE (With state preservation and side panel capture tracking)
+// 5. CHEQUERS RENDERING ENGINE
 function renderBoard(board) {
     boardState = board;
     const boardDiv = document.getElementById('checkers-board');
+    if (!boardDiv) return;
     boardDiv.innerHTML = '';
     
     for (let r = 0; r < 8; r++) {
@@ -135,8 +126,8 @@ function renderBoard(board) {
             tile.dataset.row = r;
             tile.dataset.col = c;
 
-            const val = board[r][c];
-            if (val !== " ") {
+            const val = board[r] ? board[r][c] : " ";
+            if (val && val !== " ") {
                 const p = document.createElement('div');
                 p.className = `piece ${val.toUpperCase() === 'R' ? 'red-p' : 'white-p'}`;
                 if (val === "R" || val === "W") p.innerHTML = "&#x2654;";
@@ -153,46 +144,22 @@ function renderBoard(board) {
         }
     }
 
-    if (selectedTile && document.getElementById('hints-toggle').checked) {
+    if (selectedTile && document.getElementById('hints-toggle') && document.getElementById('hints-toggle').checked) {
         calculateHints(selectedTile.r, selectedTile.c);
-    }
-}
-
-// NEW SIDE PANEL TRACKING FUNCTION: Renders circles representing captured game pieces
-function updateCaptureZones(rScore, wScore) {
-    const redZone = document.getElementById('captured-by-red');
-    const whiteZone = document.getElementById('captured-by-white');
-    
-    if (redZone) {
-        // RED SIDE (BOTTOM): Displays the White tokens that Red has captured
-        redZone.innerHTML = '';
-        for (let i = 0; i < rScore; i++) {
-            redZone.innerHTML += '<span style="display:inline-block; width:16px; height:16px; background:#ffffff; border:1px solid #a8a8a8; border-radius:50%; margin:2px;"></span>';
-        }
-    }
-    
-    if (whiteZone) {
-        // WHITE SIDE (TOP): Displays the Red tokens that White has captured
-        whiteZone.innerHTML = '';
-        for (let i = 0; i < wScore; i++) {
-            whiteZone.innerHTML += '<span style="display:inline-block; width:16px; height:16px; background:#b01b1b; border:1px solid #540606; border-radius:50%; margin:2px;"></span>';
-        }
     }
 }
 
 // 6. MOVE DISPATCH MECHANISM
 function handleTileClick(r, c) {
     if (boardState[r] && boardState[r][c] !== " " && boardState[r][c].toUpperCase() === myColor) {
-        // Clear previous selections
         document.querySelectorAll('.selected-piece').forEach(el => el.classList.remove('selected-piece'));
         document.querySelectorAll('.hint-highlight').forEach(el => el.classList.remove('hint-highlight'));
         
         selectedTile = { r, c };
         const pieceEl = document.querySelector(`[data-row="${r}"][data-col="${c}"] .piece`);
         if (pieceEl) pieceEl.classList.add('selected-piece');
-        if (document.getElementById('hints-toggle').checked) calculateHints(r, c);
+        if (document.getElementById('hints-toggle') && document.getElementById('hints-toggle').checked) calculateHints(r, c);
     } else if (selectedTile !== null) {
-        // Submit move directly via a clean HTTP route instead of WebSocket emits
         fetch('/api/make_move', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -202,11 +169,13 @@ function handleTileClick(r, c) {
         .then(data => {
             if (data.error) showAlert("Move Validation Warning", data.error);
             selectedTile = null;
-        });
+        })
+        .catch(err => console.error("Move error:", err));
     }
 }
 
 function calculateHints(r, c) {
+    if (!boardState[r] || !boardState[r][c]) return;
     const isKing = boardState[r][c] === boardState[r][c].toUpperCase();
     const directions = isKing ? [[-1,-1],[-1,1],[1,-1],[1,1]] : (myColor === 'R' ? [[-1,-1],[-1,1]] : [[1,-1],[1,1]]);
     directions.forEach(([dr, dc]) => {
@@ -218,8 +187,32 @@ function calculateHints(r, c) {
     });
 }
 
+function updateCaptureZones(rScore, wScore) {
+    const redZone = document.getElementById('captured-by-red');
+    const whiteZone = document.getElementById('captured-by-white');
+    
+    if (redZone) {
+        redZone.innerHTML = '';
+        for (let i = 0; i < rScore; i++) {
+            redZone.innerHTML += '<span style="display:inline-block; width:16px; height:16px; background:#ffffff; border:1px solid #a8a8a8; border-radius:50%; margin:2px;"></span>';
+        }
+    }
+    
+    if (whiteZone) {
+        whiteZone.innerHTML = '';
+        for (let i = 0; i < wScore; i++) {
+            whiteZone.innerHTML += '<span style="display:inline-block; width:16px; height:16px; background:#b01b1b; border:1px solid #540606; border-radius:50%; margin:2px;"></span>';
+        }
+    }
+}
+
 function showAlert(title, text) {
-    document.getElementById('alert-title').innerText = title;
-    document.getElementById('alert-text').innerText = text;
-    document.getElementById('alert-overlay').classList.remove('hidden');
+    const overlay = document.getElementById('alert-overlay');
+    const titleEl = document.getElementById('alert-title');
+    const textEl = document.getElementById('alert-text');
+    if (overlay && titleEl && textEl) {
+        titleEl.innerText = title;
+        textEl.innerText = text;
+        overlay.classList.remove('hidden');
+    }
 }
