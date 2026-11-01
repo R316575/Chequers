@@ -10,7 +10,7 @@ document.addEventListener("DOMContentLoaded", () => {
     setupUserInterface();
 });
 
-// 3. AUTOMATIC SYNC POLLING LOOP
+// 3. AUTOMATIC SYNC POLLING LOOP (Error-Proof Version)
 function startGameStatePolling() {
     if (pollingInterval) clearInterval(pollingInterval);
     
@@ -24,21 +24,28 @@ function startGameStatePolling() {
         })
         .then(data => {
             if (data.started) {
+                // Ensure layout states hide login screens
                 document.getElementById('alert-overlay').classList.add('hidden');
                 document.getElementById('lobby-modal').classList.add('hidden');
                 document.getElementById('game-container').classList.remove('hidden');
                 
+                // Assign labels based on player identities
                 document.getElementById('user-lbl').innerText = `You: ${myColor === 'R' ? data.r_name : data.w_name} (${myColor})`;
                 document.getElementById('opponent-lbl').innerText = `Opponent: ${myColor === 'R' ? data.w_name : data.r_name} (${myColor === 'R' ? 'W' : 'R'})`;
                 
+                // Synchronize header components safely
                 document.getElementById('turn-indicator').innerText = `Turn: ${data.turn === 'R' ? 'Red' : 'White'}`;
-                document.getElementById('display-code').innerText = roomCode;
                 
-                // 1. Render the main 8x8 checkerboard grid layout
+                const codeHeader = document.getElementById('display-code');
+                if (codeHeader) {
+                    codeHeader.innerText = roomCode;
+                }
+                
+                // Re-render game boards and captured tracking zones
                 renderBoard(data.board);
-                
-                // 2. RUN THE SIDE BAR CAPTURE HOOK: Pull scores and draw circles
-                updateCaptureZones(data.r_score || 0, data.w_score || 0);
+                if (typeof updateCaptureZones === 'function') {
+                    updateCaptureZones(data.r_score || 0, data.w_score || 0);
+                }
                 
                 if (data.winner) {
                     showAlert("Game Over!", `${data.winner} Wins the match!`);
