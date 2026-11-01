@@ -5,9 +5,8 @@ let myColor = null;
 let selectedTile = null;
 let boardState = [];
 
-// 2. INITIALIZATION (Runs as soon as the browser page loads safely)
 document.addEventListener("DOMContentLoaded", () => {
-    socket = io();
+    socket = io(); // This is Line 10, which will now find the local script safely
     
     // Set up real-time network listener triggers
     setupSocketListeners();
