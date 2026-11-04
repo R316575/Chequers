@@ -142,6 +142,10 @@ function handleTileClick(r, c) {
         selectedTile = { r, c };
         const pieceEl = document.querySelector(`[data-row="${r}"][data-col="${c}"] .piece`);
         if (pieceEl) pieceEl.classList.add('selected-piece');
+        
+        if (document.getElementById('hints-toggle') && document.getElementById('hints-toggle').checked) {
+            calculateHints(r, c);
+        }
     } else if (selectedTile !== null) {
         fetch('/api/make_move', {
             method: 'POST',
@@ -152,14 +156,63 @@ function handleTileClick(r, c) {
         .then(data => {
             if (data.error) showAlert("Move Validation Warning", data.error);
             selectedTile = null;
+            document.querySelectorAll('.hint-highlight').forEach(el => el.classList.remove('hint-highlight'));
+            document.querySelectorAll('.selected-piece').forEach(el => el.classList.remove('selected-piece'));
         });
     }
 }
 
+// 7. COMPREHENSIVE HINT & FORCED CAPTURE COMPUTATION ENGINE
+function findAllAvailableJumps() {
+    let availableJumps = [];
+    for (let r = 0; r < 8; r++) {
+        for (let c = 0; c < 8; c++) {
+            const piece = boardState[r] ? boardState[r][c] : " ";
+            if (piece !== " " && piece.toUpperCase() === myColor) {
+                const isKing = piece === piece.toUpperCase();
+                const directions = isKing ? [[-1,-1],[-1,1],[1,-1],[1,1]] : (myColor === 'R' ? [[-1,-1],[-1,1]] : [[1,-1],[1,1]]);
+                
+                directions.forEach(([dr, dc]) => {
+                    const opponentRow = r + dr;
+                    const opponentCol = c + dc;
+                    const landingRow = r + (dr * 2);
+                    const landingCol = c + (dc * 2);
+                    
+                    if (landingRow >= 0 && landingRow < 8 && landingCol >= 0 && landingCol < 8) {
+                        const targetPiece = boardState[opponentRow][opponentCol];
+                        const landingSquare = boardState[landingRow][landingCol];
+                        
+                        if (targetPiece !== " " && targetPiece.toUpperCase() !== myColor && landingSquare === " ") {
+                            availableJumps.push({
+                                from: { r, c },
+                                to: { r: landingRow, c: landingCol }
+                            });
+                        }
+                    }
+                });
+            }
+        }
+    }
+    return availableJumps;
+}
+
 function calculateHints(r, c) {
     if (!boardState[r] || !boardState[r][c]) return;
+    document.querySelectorAll('.hint-highlight').forEach(el => el.classList.remove('hint-highlight'));
+
+    const allBoardJumps = findAllAvailableJumps();
+    if (allBoardJumps.length > 0) {
+        const specificPieceJumps = allBoardJumps.filter(jump => jump.from.r === r && jump.from.c === c);
+        specificPieceJumps.forEach(jump => {
+            const targetedTile = document.querySelector(`[data-row="${jump.to.r}"][data-col="${jump.to.c}"]`);
+            if (targetedTile) targetedTile.classList.add('hint-highlight');
+        });
+        return; 
+    }
+
     const isKing = boardState[r][c] === boardState[r][c].toUpperCase();
     const directions = isKing ? [[-1,-1],[-1,1],[1,-1],[1,1]] : (myColor === 'R' ? [[-1,-1],[-1,1]] : [[1,-1],[1,1]]);
+    
     directions.forEach(([dr, dc]) => {
         let nr = r + dr, nc = c + dc;
         if (0 <= nr && nr < 8 && 0 <= nc && nc < 8 && boardState[nr][nc] === " ") {
@@ -175,26 +228,24 @@ function updateCaptureZones(rScore, wScore) {
     
     if (redZone) {
         redZone.innerHTML = '';
-        for (let i = 0; i < rScore; i++) {
-            redZone.innerHTML += '<span style="display:inline-block; width:16px; height:16px; background:#ffffff; border:1px solid #a8a8a8; border-radius:50%; margin:2px;"></span>';
-        }
-    }
-    if (whiteZone) {
-        whiteZone.innerHTML = '';
-        for (let i = 0; i < wScore; i++) {
-            whiteZone.innerHTML += '<span style="display:inline-block; width:16px; height:16px; background:#b01b1b; border:1px solid #540606; border-radius:50%; margin:2px;"></span>';
-        }
-    }
+        for (let i = 0; i < rScore; i++) {redZone.innerHTML += '';
 }
-
+}
+if (whiteZone) {
+whiteZone.innerHTML = '';
+for (let i = 0; i < wScore; i++) {
+whiteZone.innerHTML += '';
+}
+}
+}
 // Global Custom Alert Dialogue Engine
 function showAlert(title, text) {
-    const overlay = document.getElementById('alert-overlay');
-    const titleEl = document.getElementById('alert-title');
-    const textEl = document.getElementById('alert-text');
-    if (overlay && titleEl && textEl) {
-        titleEl.innerText = title;
-        textEl.innerText = text;
-        overlay.classList.remove('hidden');
-    }
+const overlay = document.getElementById('alert-overlay');
+const titleEl = document.getElementById('alert-title');
+const textEl = document.getElementById('alert-text');
+if (overlay && titleEl && textEl) {
+titleEl.innerText = title;
+textEl.innerText = text;
+overlay.classList.remove('hidden');
+}
 }
