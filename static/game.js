@@ -226,17 +226,43 @@ function updateCaptureZones(rScore, wScore) {
     const redZone = document.getElementById('captured-by-red');
     const whiteZone = document.getElementById('captured-by-white');
     
-    if (redZone) {
-        redZone.innerHTML = '';
-        for (let i = 0; i < rScore; i++) {redZone.innerHTML += '';
-}
-}
-if (whiteZone) {
-whiteZone.innerHTML = '';
-for (let i = 0; i < wScore; i++) {
-whiteZone.innerHTML += '';
-}
-}
+    // Clear zones cleanly to handle fresh states
+    if (redZone) redZone.innerHTML = '';
+    if (whiteZone) whiteZone.innerHTML = '';
+
+    // Determine perspective-based styling for the miniatures
+    const miniatureWhitePiece = '<span style="display:inline-block; width:12px; height:12px; background:#ffffff; border:1px solid #a8a8a8; border-radius:50%; margin:2px; box-shadow: 1px 1px 3px rgba(0,0,0,0.2);"></span>';
+    const miniatureRedPiece = '<span style="display:inline-block; width:12px; height:12px; background:#b01b1b; border:1px solid #540606; border-radius:50%; margin:2px; box-shadow: 1px 1px 3px rgba(0,0,0,0.2);"></span>';
+
+    if (myColor === 'R') {
+        // Red Player Perspective:
+        // 'captured-by-red' is YOUR zone -> should display the miniature WHITE pieces you won.
+        if (redZone) {
+            for (let i = 0; i < rScore; i++) {
+                redZone.innerHTML += miniatureWhitePiece;
+            }
+        }
+        // 'captured-by-white' is OPPONENT'S zone -> should display the miniature RED pieces they won from you.
+        if (whiteZone) {
+            for (let i = 0; i < wScore; i++) {
+                whiteZone.innerHTML += miniatureRedPiece;
+            }
+        }
+    } else {
+        // White Player Perspective (Opposite Layout mapping):
+        // 'captured-by-white' is YOUR zone -> should display the miniature RED pieces you won.
+        if (whiteZone) {
+            for (let i = 0; i < wScore; i++) {
+                whiteZone.innerHTML += miniatureRedPiece;
+            }
+        }
+        // 'captured-by-red' is OPPONENT'S zone -> should display the miniature WHITE pieces they won from you.
+        if (redZone) {
+            for (let i = 0; i < rScore; i++) {
+                redZone.innerHTML += miniatureWhitePiece;
+            }
+        }
+    }
 }
 // Global Custom Alert Dialogue Engine
 function showAlert(title, text) {
