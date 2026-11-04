@@ -226,44 +226,43 @@ function updateCaptureZones(rScore, wScore) {
     const redZone = document.getElementById('captured-by-red');
     const whiteZone = document.getElementById('captured-by-white');
     
-    // Clear zones cleanly to handle fresh states
+    // Clear zones cleanly before rendering fresh states
     if (redZone) redZone.innerHTML = '';
     if (whiteZone) whiteZone.innerHTML = '';
 
-    // Determine perspective-based styling for the miniatures
-    const miniatureWhitePiece = '<span style="display:inline-block; width:12px; height:12px; background:#ffffff; border:1px solid #a8a8a8; border-radius:50%; margin:2px; box-shadow: 1px 1px 3px rgba(0,0,0,0.2);"></span>';
-    const miniatureRedPiece = '<span style="display:inline-block; width:12px; height:12px; background:#b01b1b; border:1px solid #540606; border-radius:50%; margin:2px; box-shadow: 1px 1px 3px rgba(0,0,0,0.2);"></span>';
+    // Increased size to 18px for better visibility
+    const miniatureWhitePiece = '<span style="display:inline-block; width:18px; height:18px; background:#ffffff; border:2px solid #a8a8a8; border-radius:50%; margin:2px; box-shadow: 1px 1px 3px rgba(0,0,0,0.3);"></span>';
+    const miniatureRedPiece = '<span style="display:inline-block; width:18px; height:18px; background:#b01b1b; border:2px solid #540606; border-radius:50%; margin:2px; box-shadow: 1px 1px 3px rgba(0,0,0,0.3);"></span>';
 
     if (myColor === 'R') {
-        // Red Player Perspective:
-        // 'captured-by-red' is YOUR zone -> should display the miniature WHITE pieces you won.
+        # Bottom side (Your side): Show the White pieces you captured
         if (redZone) {
             for (let i = 0; i < rScore; i++) {
                 redZone.innerHTML += miniatureWhitePiece;
             }
         }
-        // 'captured-by-white' is OPPONENT'S zone -> should display the miniature RED pieces they won from you.
+        # Top side (Opponent side): Show the Red pieces they captured from you
         if (whiteZone) {
             for (let i = 0; i < wScore; i++) {
                 whiteZone.innerHTML += miniatureRedPiece;
             }
         }
     } else {
-        // White Player Perspective (Opposite Layout mapping):
-        // 'captured-by-white' is YOUR zone -> should display the miniature RED pieces you won.
-        if (whiteZone) {
+        # Bottom side (Your side): Show the Red pieces you captured
+        if (redZone) {
             for (let i = 0; i < wScore; i++) {
-                whiteZone.innerHTML += miniatureRedPiece;
+                redZone.innerHTML += miniatureRedPiece;
             }
         }
-        // 'captured-by-red' is OPPONENT'S zone -> should display the miniature WHITE pieces they won from you.
-        if (redZone) {
+        # Top side (Opponent side): Show the White pieces they captured from you
+        if (whiteZone) {
             for (let i = 0; i < rScore; i++) {
-                redZone.innerHTML += miniatureWhitePiece;
+                whiteZone.innerHTML += miniatureWhitePiece;
             }
         }
     }
 }
+
 // Global Custom Alert Dialogue Engine
 function showAlert(title, text) {
 const overlay = document.getElementById('alert-overlay');
