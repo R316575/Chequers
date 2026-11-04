@@ -97,26 +97,27 @@ class Board:
         return True, "Success"
 
     def check_no_moves(self, player):
+        if self.check_forced_capture(player):
+            return False
+            
         for r in range(8):
             for c in range(8):
                 if self.board[r][c].upper() == player:
-                    for dr in [-2, -1, 1, 2]:
-                        for dc in [-2, -1, 1, 2]:
+                    for dr in [-1, 1]:
+                        for dc in [-1, 1]:
                             nr, nc = r + dr, c + dc
-                            if 0 <= nr < 8 and 0 <= nc < 8:
-                                if abs(dr) == 1 and self.board[nr][nc] == " ":
-                                    if (player == "R" and self.board[r][c] == "r" and dr < 0) or (player == "W" and self.board[r][c] == "w" and dr > 0) or self.board[r][c].isupper():
-                                        return False
+                            if 0 <= nr < 8 and 0 <= nc < 8 and self.board[nr][nc] == " ":
+                                if (player == "R" and self.board[r][c] == "r" and dr < 0) or \
+                                   (player == "W" and self.board[r][c] == "w" and dr > 0) or \
+                                   self.board[r][c].isupper():
+                                    return False
         return True
 
 # --- HTTP ROUTES ---
 @app.route('/')
 def index():
-    # Serves the single page application HTML
     return render_template('index.html')
 
-
-# 1. HTTP ROUTE: CREATE ROOM (Correct Single Version)
 @app.route('/api/create_room', methods=['POST'])
 def api_create_room():
     data = request.get_json() or {}
@@ -130,8 +131,6 @@ def api_create_room():
     }
     return jsonify({'room_code': room, 'color': 'R'})
 
-
-# 2. HTTP ROUTE: JOIN ROOM
 @app.route('/api/join_room', methods=['POST'])
 def api_join_room():
     data = request.get_json() or {}
@@ -148,8 +147,6 @@ def api_join_room():
         return jsonify({'success': True, 'room_code': room, 'color': 'W'})
     return jsonify({'success': False, 'error': 'Invalid Room Code.'}), 400
 
-
-# 3. HTTP ROUTE: SYNC DATA STATE POLLING
 @app.route('/api/get_game_state', methods=['GET'])
 def api_get_game_state():
     room = request.args.get('room_code', '').upper()
@@ -171,14 +168,12 @@ def api_get_game_state():
             'r_name': r_name,
             'w_name': w_name,
             'board': board_obj.board,
-            'r_score': board_obj.r_score,  # Tracks captured white pieces
-            'w_score': board_obj.w_score,  # Tracks captured red pieces
+            'r_score': board_obj.r_score,
+            'w_score': board_obj.w_score,
             'winner': winner
         })
     return jsonify({'error': 'Invalid Room Code'}), 404
 
-
-# 4. HTTP ROUTE: MAKE MOVE PLACEMENTS
 @app.route('/api/make_move', methods=['POST'])
 def api_make_move():
     data = request.get_json() or {}
@@ -200,20 +195,14 @@ def api_make_move():
         
     return jsonify({'success': True})
 
-
-# --- LEAVE EMPTY FALLBACK SOCKET STUBS UNCHANGED BELOW ---
 @socketio.on('join_game')
-def on_join(data):
-    pass
+def on_join(data): pass
 
 @socketio.on('make_move')
-def on_move(data):
-    pass
+def on_move(data): pass
 
 @socketio.on('disconnect')
-def on_disconnect():
-    pass
-
+def on_disconnect(): pass
 
 if __name__ == '__main__':
     socketio.run(app, debug=True)
