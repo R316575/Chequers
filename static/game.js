@@ -159,29 +159,43 @@ function updateCaptureZones(rScore, wScore) {
     }
 }
 
-// 6. MOVE DISPATCH MECHANISM
-function handleTileClick(r, c) {
-    if (boardState[r] && boardState[r][c] !== " " && boardState[r][c].toUpperCase() === myColor) {
-        // Clear previous selections
-        document.querySelectorAll('.selected-piece').forEach(el => el.classList.remove('selected-piece'));
-        document.querySelectorAll('.hint-highlight').forEach(el => el.classList.remove('hint-highlight'));
+function updateCaptureZones(rScore, wScore) {
+    // Select the physical UI zones: top panel vs. bottom panel on the current screen
+    const topZone = document.getElementById('captured-by-white'); // Label references top panel location
+    const bottomZone = document.getElementById('captured-by-red'); // Label references bottom panel location
+    
+    if (!topZone || !bottomZone) return;
+    
+    // Clear out both containers before redrawing
+    topZone.innerHTML = '';
+    bottomZone.innerHTML = '';
+    
+    // ADAPTIVE LAYOUT MATRIX RULES:
+    if (myColor === 'R') {
+        // --- SCREEN VIEW FOR PETE (RED PLAYER) ---
+        // Top Zone (Opponent): Displays White pieces that Red has captured? No, displays Red pieces captured by White.
+        // Let's make it intuitive: The person sitting at the bottom sees their own trophy captures at the bottom.
         
-        selectedTile = { r, c };
-        const pieceEl = document.querySelector(`[data-row="${r}"][data-col="${c}"] .piece`);
-        if (pieceEl) pieceEl.classList.add('selected-piece');
-        if (document.getElementById('hints-toggle').checked) calculateHints(r, c);
-    } else if (selectedTile !== null) {
-        // Submit move directly via a clean HTTP route instead of WebSocket emits
-        fetch('/api/make_move', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ room_code: roomCode, color: myColor, r: selectedTile.r, c: selectedTile.c, nr: r, nc: c })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.error) showAlert("Move Validation Warning", data.error);
-            selectedTile = null;
-        });
+        // Bottom Zone (Pete's captures): Pete has captured White pieces.
+        for (let i = 0; i < rScore; i++) {
+            bottomZone.innerHTML += '<span style="display:inline-block; width:16px; height:16px; background:#ffffff; border:1px solid #a8a8a8; border-radius:50%; margin:2px;"></span>';
+        }
+        // Top Zone (Pat's captures): Pat has captured Red pieces.
+        for (let i = 0; i < wScore; i++) {
+            topZone.innerHTML += '<span style="display:inline-block; width:16px; height:16px; background:#b01b1b; border:1px solid #540606; border-radius:50%; margin:2px;"></span>';
+        }
+    } else {
+        // --- SCREEN VIEW FOR PAT (WHITE PLAYER) ---
+        // For White's window, positions must be inverted! White sits at the bottom now.
+        
+        // Bottom Zone (Pat's captures): Pat has captured Red pieces.
+        for (let i = 0; i < wScore; i++) {
+            bottomZone.innerHTML += '<span style="display:inline-block; width:16px; height:16px; background:#b01b1b; border:1px solid #540606; border-radius:50%; margin:2px;"></span>';
+        }
+        // Top Zone (Pete's captures): Pete has captured White pieces.
+        for (let i = 0; i < rScore; i++) {
+            topZone.innerHTML += '<span style="display:inline-block; width:16px; height:16px; background:#ffffff; border:1px solid #a8a8a8; border-radius:50%; margin:2px;"></span>';
+        }
     }
 }
 
