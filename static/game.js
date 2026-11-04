@@ -35,8 +35,8 @@ function startGameStatePolling() {
                 document.getElementById('lobby-modal').classList.add('hidden');
                 document.getElementById('game-container').classList.remove('hidden');
                 
-                document.getElementById('user-lbl').innerText = `You: ${myColor === 'R' ? data.r_name : data.w_name} (${myColor})`;
-                document.getElementById('opponent-lbl').innerText = `Opponent: ${myColor === 'R' ? data.w_name : data.r_name} (${myColor === 'R' ? 'W' : 'R'})`;
+                document.getElementById('user-lbl').innerText = `You: ${myColor === 'R' ? data.r_name : data.w_name} (${myColor === 'R' ? 'Red' : 'White'})`;
+                document.getElementById('opponent-lbl').innerText = `Opponent: ${myColor === 'R' ? data.w_name : data.r_name} (${myColor === 'R' ? 'White' : 'Red'})`;
                 
                 if (data.winner) {
                     showAlert("Game Over!", `${data.winner} Wins the Match!`);
