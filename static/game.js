@@ -235,26 +235,26 @@ function updateCaptureZones(rScore, wScore) {
     const miniatureRedPiece = '<span style="display:inline-block; width:18px; height:18px; background:#b01b1b; border:2px solid #540606; border-radius:50%; margin:2px; box-shadow: 1px 1px 3px rgba(0,0,0,0.3);"></span>';
 
     if (myColor === 'R') {
-        # Bottom side (Your side): Show the White pieces you captured
+        // Bottom side (Your side): Show the White pieces you captured
         if (redZone) {
             for (let i = 0; i < rScore; i++) {
                 redZone.innerHTML += miniatureWhitePiece;
             }
         }
-        # Top side (Opponent side): Show the Red pieces they captured from you
+        // Top side (Opponent side): Show the Red pieces they captured from you
         if (whiteZone) {
             for (let i = 0; i < wScore; i++) {
                 whiteZone.innerHTML += miniatureRedPiece;
             }
         }
     } else {
-        # Bottom side (Your side): Show the Red pieces you captured
+        // Bottom side (Your side): Show the Red pieces you captured
         if (redZone) {
             for (let i = 0; i < wScore; i++) {
                 redZone.innerHTML += miniatureRedPiece;
             }
         }
-        # Top side (Opponent side): Show the White pieces they captured from you
+        // Top side (Opponent side): Show the White pieces they captured from you
         if (whiteZone) {
             for (let i = 0; i < rScore; i++) {
                 whiteZone.innerHTML += miniatureWhitePiece;
