@@ -39,7 +39,7 @@ function startGameStatePolling() {
                 document.getElementById('opponent-lbl').innerText = `Opponent: ${myColor === 'R' ? data.w_name : data.r_name} (${myColor === 'R' ? 'W' : 'R'})`;
                 
                 if (data.winner) {
-                    showAlert("Game Over!", `${data.winner} Wins the match!`);
+                    showAlert("Game Over!", `${data.winner} Wins the Match!`);
                     clearInterval(pollingInterval);
                 }
             }
