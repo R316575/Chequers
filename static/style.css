@@ -207,3 +207,27 @@ body {
     background-color: #8a1313;
     transform: translateY(-1px);
 }
+
+
+/* --- DISCONNECTION COUNTDOWN BANNER --- */
+.disconnect-banner {
+    position: fixed;
+    top: 70px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #fff3cd;
+    color: #664d03;
+    border: 2px solid #ffecb5;
+    border-left: 6px solid #d97706;
+    padding: 12px 22px;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: bold;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    z-index: 250;
+    text-align: center;
+}
+
+.disconnect-banner.hidden {
+    display: none;
+}
