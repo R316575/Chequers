@@ -39,11 +39,15 @@ function startGameStatePolling() {
                     document.getElementById('game-container').classList.remove('hidden');
                 }
                 
-            // Top label ('opponent-lbl' position) always matches the White pieces at the top
-            document.getElementById('opponent-lbl').innerText = `${myColor === 'W' ? 'You' : 'Opponent'}: ${data.w_name} (White)`;
+                // Top label ('opponent-lbl' position) always matches the White pieces at the top
+                const topLabel = document.getElementById('opponent-lbl');
+                topLabel.innerText = `${myColor === 'W' ? 'You' : 'Opponent'}: ${data.w_name} (White)`;
+                topLabel.classList.toggle('active-turn', data.turn === 'W');
 
                 // Bottom label ('user-lbl' position) always matches the Red pieces at the bottom
-                document.getElementById('user-lbl').innerText = `${myColor === 'R' ? 'You' : 'Opponent'}: ${data.r_name} (Red)`;
+                const bottomLabel = document.getElementById('user-lbl');
+                bottomLabel.innerText = `${myColor === 'R' ? 'You' : 'Opponent'}: ${data.r_name} (Red)`;
+                bottomLabel.classList.toggle('active-turn', data.turn === 'R');
 
                 // ADD THESE 4 LINES:
                 if (data.event_id && data.event_id > lastSeenEventId) {
