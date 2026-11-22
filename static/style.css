@@ -84,3 +84,15 @@ body {
     z-index: 200;
     transition: opacity 0.3s ease;
 }
+
+
+/* --- ACTIVE TURN PLAYER HIGHLIGHT --- */
+.active-turn {
+    background-color: #ffd700;
+    color: #2b593f;
+    font-weight: bold;
+    padding: 4px 12px;
+    border-radius: 6px;
+    border: 2px solid #4a3c31;
+    box-shadow: 0 0 8px rgba(255, 215, 0, 0.7);
+}
