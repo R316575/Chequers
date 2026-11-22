@@ -255,8 +255,8 @@ def api_get_game_state():
                 elapsed_turn = now - board_obj.turn_start_time
                 turn_remaining = max(0, int(board_obj.turn_duration - elapsed_turn))
                 if turn_remaining == 0:
-                    other = "White" if board_obj.current_turn == "R" else "Red"
-                    board_obj.afk_winner = f"{other} (Opponent Timed Out / AFK)"
+                    board_obj.afk_winner = board_obj.calculate_disconnect_winner()
+
         
         winner = None
         if board_obj.forfeit_winner: winner = board_obj.forfeit_winner
