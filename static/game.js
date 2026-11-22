@@ -18,7 +18,7 @@ function startGameStatePolling() {
     pollingInterval = setInterval(() => {
         if (!roomCode) return;
         
-        fetch(`/api/get_game_state?room_code=${roomCode}`)
+        fetch(`/api/get_game_state?room_code=${roomCode}&color=${myColor || ''}`)
         .then(response => {
             if (!response.ok) throw new Error("Sync failed");
             return response.json();
@@ -55,8 +55,14 @@ function startGameStatePolling() {
                     showEventToast(data.last_event);
                 }
 
+                updateDisconnectBanner(data.disconnected_name, data.disconnect_remaining);
+
                 if (data.winner) {
-                    showAlert("Game Over!", `${data.winner} Wins the Match!${data.forfeited ? ' (Opponent Forfeited)' : ''}`);
+                    updateDisconnectBanner(null, null);
+                    const winMsg = data.winner.startsWith("Draw")
+                        ? data.winner
+                        : `${data.winner} Wins the Match!${data.forfeited ? ' (Opponent Forfeited)' : ''}`;
+                    showAlert("Game Over!", winMsg);
                     clearInterval(pollingInterval);
                 }
             }
@@ -377,4 +383,24 @@ function showRulesModal() {
         });
     }
     overlay.classList.remove('hidden');
+}
+
+
+// Non-blocking banner showing 30s reconnection timer when opponent drops
+function updateDisconnectBanner(playerName, secondsLeft) {
+    let banner = document.getElementById('disconnect-banner');
+    if (!playerName || secondsLeft === null || secondsLeft === undefined) {
+        if (banner) banner.classList.add('hidden');
+        return;
+    }
+
+    if (!banner) {
+        banner = document.createElement('div');
+        banner.id = 'disconnect-banner';
+        banner.className = 'disconnect-banner';
+        document.body.appendChild(banner);
+    }
+
+    banner.innerText = `⚠️ ${playerName}'s connection dropped. Attempting to re-establish... (${secondsLeft}s)`;
+    banner.classList.remove('hidden');
 }
