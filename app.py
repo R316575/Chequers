@@ -19,6 +19,7 @@ class Board:
         self.r_score = 0
         self.current_turn = "R"
         self.last_event = None
+        self.forfeit_winner = None
         self.event_id = 0  
         self.initialise_board()
 
@@ -173,7 +174,8 @@ def api_get_game_state():
         w_name = p_vals[1]['name'] if len(p_vals) > 1 else "Waiting..."
         
         winner = None
-        if board_obj.r_score == 12 or board_obj.check_no_moves("W"): winner = "Red"
+        if board_obj.forfeit_winner: winner = board_obj.forfeit_winner
+        elif board_obj.r_score == 12 or board_obj.check_no_moves("W"): winner = "Red"
         elif board_obj.w_score == 12 or board_obj.check_no_moves("R"): winner = "White"
         
         return jsonify({
@@ -209,6 +211,20 @@ def api_make_move():
     if not success:
         return jsonify({'error': msg})
         
+    return jsonify({'success': True})
+
+@app.route('/api/quit_game', methods=['POST'])
+def api_quit_game():
+    data = request.get_json() or {}
+    room = data.get('room_code', '').upper()
+    quitting_color = data.get('color')
+
+    if room not in ACTIVE_GAMES:
+        return jsonify({'error': 'Room not found'}), 404
+
+    board_obj = ACTIVE_GAMES[room]['board']
+    # If Red quits, White wins; if White quits, Red wins
+    board_obj.forfeit_winner = "White" if quitting_color == "R" else "Red"
     return jsonify({'success': True})
 
 @socketio.on('join_game')
