@@ -115,6 +115,30 @@ function setupUserInterface() {
     }
 }
 
+// Dynamically add Quit / Forfeit button inside the game container
+    const gameContainer = document.getElementById('game-container');
+    if (gameContainer && !document.getElementById('btn-quit')) {
+        const quitBtn = document.createElement('button');
+        quitBtn.id = 'btn-quit';
+        quitBtn.className = 'quit-btn';
+        quitBtn.innerText = 'Quit Game';
+        quitBtn.addEventListener('click', () => {
+            if (!roomCode || !myColor) return;
+            fetch('/api/quit_game', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ room_code: roomCode, color: myColor })
+            })
+            .then(res => res.json())
+            .then(() => {
+                const winnerName = myColor === 'R' ? 'White' : 'Red';
+                showAlert("Game Over!", `${winnerName} Wins the Match! (Opponent Forfeited)`);
+                clearInterval(pollingInterval);
+            });
+        });
+        gameContainer.appendChild(quitBtn);
+    }
+
 // 5. CHEQUERS RENDERING ENGINE
 function renderBoard(board) {
     boardState = board;
