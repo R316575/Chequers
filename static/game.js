@@ -465,7 +465,7 @@ function updateTurnTimerUI(currentTurn, secondsLeft, extraTimeMap) {
     clockEl.innerText = `⏱ ${secondsLeft}s`;
     clockEl.classList.toggle('low-time', secondsLeft <= 15);
 
-    const isMyTurn = (currentTurn === myColor);
+       const isMyTurn = (currentTurn === myColor);
     const hasExtension = extraTimeMap && (extraTimeMap[myColor] > 0);
     if (isMyTurn && secondsLeft <= 15 && secondsLeft > 0 && hasExtension) {
         extendBtn.classList.remove('hidden');
@@ -473,6 +473,3 @@ function updateTurnTimerUI(currentTurn, secondsLeft, extraTimeMap) {
         extendBtn.classList.add('hidden');
     }
 }
-
-    banner.innerText = "⚠️ Your connection dropped. Attempting to reconnect...";
-    banner.classList.remove('hidden');
