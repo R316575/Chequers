@@ -96,3 +96,22 @@ body {
     font-weight: 700 !important;
     text-shadow: 0 0 8px rgba(255, 215, 0, 0.85), 0 0 16px rgba(255, 195, 0, 0.55) !important;
 }
+
+
+/* --- QUIT / FORFEIT BUTTON --- */
+.quit-btn {
+    margin-top: 12px;
+    padding: 8px 18px;
+    background-color: #b01b1b;
+    color: #fffcf2;
+    border: 2px solid #540606;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.quit-btn:hover {
+    background-color: #8a1313;
+}
