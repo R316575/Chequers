@@ -24,6 +24,7 @@ function startGameStatePolling() {
             return response.json();
         })
         .then(data => {
+            updateSelfOfflineBanner(false);
             renderBoard(data.board);
             updateCaptureZones(data.r_score || 0, data.w_score || 0);
             document.getElementById('turn-indicator').innerText = `Turn: ${data.turn === 'R' ? 'Red' : 'White'}`;
@@ -67,7 +68,10 @@ function startGameStatePolling() {
                 }
             }
         })
-        .catch(err => console.error("Sync error logs:", err));
+            .catch(err => {
+            console.error("Sync error logs:", err);
+            updateSelfOfflineBanner(true);
+        });
     }, 1500);
 }
 
@@ -400,6 +404,26 @@ function updateDisconnectBanner(playerName, secondsLeft) {
         banner.className = 'disconnect-banner';
         document.body.appendChild(banner);
     }
+
+
+// Local client-side banner when THIS player's own internet drops
+function updateSelfOfflineBanner(isOffline) {
+    let banner = document.getElementById('self-offline-banner');
+    if (!isOffline) {
+        if (banner) banner.classList.add('hidden');
+        return;
+    }
+
+    if (!banner) {
+        banner = document.createElement('div');
+        banner.id = 'self-offline-banner';
+        banner.className = 'disconnect-banner';
+        document.body.appendChild(banner);
+    }
+
+    banner.innerText = "⚠️ Your connection dropped. Attempting to reconnect...";
+    banner.classList.remove('hidden');
+}
 
     banner.innerText = `⚠️ ${playerName}'s connection dropped. Attempting to re-establish... (${secondsLeft}s)`;
     banner.classList.remove('hidden');
