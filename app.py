@@ -224,7 +224,7 @@ def api_quit_game():
 
     board_obj = ACTIVE_GAMES[room]['board']
     # If Red quits, White wins; if White quits, Red wins
-    board_obj.forfeit_winner = "White" if quitting_color == "R" else "Red"
+    board_obj.forfeit_winner = "White (Opponent Forfeited)" if quitting_color == "R" else "Red (Opponent Forfeited)"
     return jsonify({'success': True})
 
 @socketio.on('join_game')
