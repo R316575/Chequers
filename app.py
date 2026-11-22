@@ -184,7 +184,9 @@ def api_get_game_state():
             'board': board_obj.board,
             'r_score': board_obj.r_score,
             'w_score': board_obj.w_score,
-            'winner': winner
+            'winner': winner,
+            'last_event': board_obj.last_event,
+            'event_id': board_obj.event_id
         })
     return jsonify({'error': 'Invalid Room Code'}), 404
 
