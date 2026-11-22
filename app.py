@@ -139,11 +139,11 @@ class Board:
         return True
 
     def calculate_disconnect_winner(self):
-        # Adjudicate strictly by number of pieces captured
+        # Win strictly by number of pieces captured
         if self.r_score > self.w_score:
-            return f"Red (Adjudicated by captures: {self.r_score} vs {self.w_score})"
+            return f"Red (By captures: {self.r_score} vs {self.w_score})"
         elif self.w_score > self.r_score:
-            return f"White (Adjudicated by captures: {self.w_score} vs {self.r_score})"
+            return f"White (By captures: {self.w_score} vs {self.r_score})"
         else:
             return f"Draw (Equal captures: {self.r_score} vs {self.w_score})" 
 
