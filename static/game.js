@@ -139,6 +139,16 @@ function setupUserInterface() {
         gameContainer.appendChild(quitBtn);
     }
 
+    // Dynamically add How to Play button above the Quit button
+    if (gameContainer && !document.getElementById('btn-rules')) {
+        const rulesBtn = document.createElement('button');
+        rulesBtn.id = 'btn-rules';
+        rulesBtn.className = 'rules-btn';
+        rulesBtn.innerText = 'How to Play';
+        rulesBtn.addEventListener('click', showRulesModal);
+        gameContainer.appendChild(rulesBtn);
+    }
+
 // 5. CHEQUERS RENDERING ENGINE
 function renderBoard(board) {
     boardState = board;
@@ -334,4 +344,37 @@ function showEventToast(message) {
     toast.hideTimer = setTimeout(() => {
         toast.classList.add('hidden');
     }, 2500);
+}
+
+// Pop-up modal displaying Chequers / Draughts rules
+function showRulesModal() {
+    let overlay = document.getElementById('rules-overlay');
+    if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.id = 'rules-overlay';
+        overlay.className = 'rules-overlay';
+        overlay.innerHTML = `
+            <div class="rules-box">
+                <h2>How to Play Chequers</h2>
+                <ul>
+                    <li><strong>Turns:</strong> Red always moves first, followed by White.</li>
+                    <li><strong>Movement:</strong> Regular pieces move diagonally forward by 1 dark square.</li>
+                    <li><strong>Captures:</strong> Jump diagonally over an adjacent opponent piece into an empty square beyond it.</li>
+                    <li><strong>Forced Captures:</strong> If a capture is available on your turn, you <em>must</em> take it.</li>
+                    <li><strong>Kings:</strong> Reaching the far edge crowns your piece as a <strong>King (♔)</strong>, allowing it to move and capture both forwards and backwards.</li>
+                    <li><strong>Winning:</strong> Win by capturing all 12 opponent pieces or blocking them from making any legal moves.</li>
+                </ul>
+                <button id="close-rules-btn" class="rules-close-btn">Got It</button>
+            </div>
+        `;
+        document.body.appendChild(overlay);
+
+        document.getElementById('close-rules-btn').addEventListener('click', () => {
+            overlay.classList.add('hidden');
+        });
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) overlay.classList.add('hidden');
+        });
+    }
+    overlay.classList.remove('hidden');
 }
