@@ -390,20 +390,6 @@ function showRulesModal() {
 }
 
 
-// Non-blocking banner showing 30s reconnection timer when opponent drops
-function updateDisconnectBanner(playerName, secondsLeft) {
-    let banner = document.getElementById('disconnect-banner');
-    if (!playerName || secondsLeft === null || secondsLeft === undefined) {
-        if (banner) banner.classList.add('hidden');
-        return;
-    }
-
-    if (!banner) {
-        banner = document.createElement('div');
-        banner.id = 'disconnect-banner';
-        banner.className = 'disconnect-banner';
-        document.body.appendChild(banner);
-    }
 
 // Non-blocking banner showing 30s reconnection timer when opponent drops
 function updateDisconnectBanner(playerName, secondsLeft) {
@@ -424,7 +410,6 @@ function updateDisconnectBanner(playerName, secondsLeft) {
     banner.classList.remove('hidden');
 }
 
-    
 // Local client-side banner when THIS player's own internet drops
 function updateSelfOfflineBanner(isOffline) {
     let banner = document.getElementById('self-offline-banner');
