@@ -86,14 +86,13 @@ body {
 }
 
 
-/* --- ACTIVE TURN PLAYER HIGHLIGHT --- */
+/* --- GOLD TEXT GLOW FOR ACTIVE TURN --- */
+#opponent-lbl, #user-lbl {
+    transition: all 0.25s ease;
+}
+
 .active-turn {
-    background-color: #ffd700 !important;
-    color: #2b593f !important;
-    font-weight: bold !important;
-    padding: 4px 12px !important;
-    border-radius: 6px !important;
-    border: 2px solid #4a3c31 !important;
-    box-shadow: 0 0 8px rgba(255, 215, 0, 0.7) !important;
-    display: inline-block !important;
+    color: #c59b08 !important;
+    font-weight: 700 !important;
+    text-shadow: 0 0 8px rgba(255, 215, 0, 0.85), 0 0 16px rgba(255, 195, 0, 0.55) !important;
 }
