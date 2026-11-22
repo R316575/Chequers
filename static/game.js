@@ -424,6 +424,7 @@ function updateDisconnectBanner(playerName, secondsLeft) {
     banner.classList.remove('hidden');
 }
 
+    
 // Local client-side banner when THIS player's own internet drops
 function updateSelfOfflineBanner(isOffline) {
     let banner = document.getElementById('self-offline-banner');
