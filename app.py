@@ -20,6 +20,10 @@ class Board:
         self.current_turn = "R"
         self.last_event = None
         self.forfeit_winner = None
+        self.last_seen = {"R": time.time(), "W": time.time()}
+        self.disconnect_start = None
+        self.disconnected_player = None
+        self.timeout_result = None
         self.event_id = 0  
         self.initialise_board()
 
@@ -128,6 +132,18 @@ class Board:
                                     return False
         return True
 
+    def calculate_disconnect_winner(self):
+        # Adjudicate strictly by number of pieces captured
+        if self.r_score > self.w_score:
+            return f"Red (Adjudicated by captures: {self.r_score} vs {self.w_score})"
+        elif self.w_score > self.r_score:
+            return f"White (Adjudicated by captures: {self.w_score} vs {self.r_score})"
+        else:
+            return f"Draw (Equal captures: {self.r_score} vs {self.w_score})" 
+
+
+
+
 # --- HTTP ROUTES ---
 @app.route('/')
 def index():
@@ -165,6 +181,7 @@ def api_join_room():
 @app.route('/api/get_game_state', methods=['GET'])
 def api_get_game_state():
     room = request.args.get('room_code', '').upper()
+    caller_color = request.args.get('color', '').upper()
     if room in ACTIVE_GAMES:
         game_info = ACTIVE_GAMES[room]
         board_obj = game_info['board']
@@ -172,9 +189,36 @@ def api_get_game_state():
         
         r_name = p_vals[0]['name'] if len(p_vals) > 0 else "Host"
         w_name = p_vals[1]['name'] if len(p_vals) > 1 else "Waiting..."
+        now = time.time()
+
+        # 1. Update heartbeat for whichever player is currently polling
+        if caller_color in ("R", "W"):
+            board_obj.last_seen[caller_color] = now
+            if board_obj.disconnected_player == caller_color:
+                board_obj.disconnected_player = None
+                board_obj.disconnect_start = None
+
+        # 2. Check if the opponent has dropped (> 5 seconds without a heartbeat)
+        disconnect_remaining = None
+        disconnected_name = None
+
+        if game_info['started'] and not board_obj.forfeit_winner and not board_obj.timeout_result:
+            opponent = "W" if caller_color == "R" else ("R" if caller_color == "W" else None)
+            if opponent and (now - board_obj.last_seen[opponent] > 5.0):
+                if board_obj.disconnect_start is None:
+                    board_obj.disconnect_start = now
+                    board_obj.disconnected_player = opponent
+
+                elapsed = now - board_obj.disconnect_start
+                disconnect_remaining = max(0, int(30 - elapsed))
+                disconnected_name = w_name if opponent == "W" else r_name
+
+                if disconnect_remaining == 0:
+                    board_obj.timeout_result = board_obj.calculate_disconnect_winner()
         
         winner = None
         if board_obj.forfeit_winner: winner = board_obj.forfeit_winner
+        elif board_obj.timeout_result: winner = board_obj.timeout_result
         elif board_obj.r_score == 12 or board_obj.check_no_moves("W"): winner = "Red"
         elif board_obj.w_score == 12 or board_obj.check_no_moves("R"): winner = "White"
         
@@ -189,9 +233,12 @@ def api_get_game_state():
             'winner': winner,
             'forfeited': bool(board_obj.forfeit_winner),
             'last_event': board_obj.last_event,
-            'event_id': board_obj.event_id
+            'event_id': board_obj.event_id,
+            'disconnected_name': disconnected_name,
+            'disconnect_remaining': disconnect_remaining
         })
     return jsonify({'error': 'Invalid Room Code'}), 404
+
 
 @app.route('/api/make_move', methods=['POST'])
 def api_make_move():
