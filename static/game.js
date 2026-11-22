@@ -476,4 +476,3 @@ function updateTurnTimerUI(currentTurn, secondsLeft, extraTimeMap) {
 
     banner.innerText = "⚠️ Your connection dropped. Attempting to reconnect...";
     banner.classList.remove('hidden');
-}
