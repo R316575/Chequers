@@ -56,7 +56,7 @@ function startGameStatePolling() {
                 }
 
                 if (data.winner) {
-                    showAlert("Game Over!", `${data.winner} Wins the Match!`);
+                    showAlert("Game Over!", `${data.winner} Wins the Match!${data.forfeited ? ' (Opponent Forfeited)' : ''}`);
                     clearInterval(pollingInterval);
                 }
             }
