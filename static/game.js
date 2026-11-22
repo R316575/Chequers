@@ -4,6 +4,7 @@ let myColor = null;
 let selectedTile = null;
 let boardState = [];
 let pollingInterval = null;
+let lastSeenEventId = 0;
 
 // 2. INITIALIZATION
 document.addEventListener("DOMContentLoaded", () => {
@@ -38,9 +39,15 @@ function startGameStatePolling() {
             // Top label ('opponent-lbl' position) always matches the White pieces at the top
             document.getElementById('opponent-lbl').innerText = `${myColor === 'W' ? 'You' : 'Opponent'}: ${data.w_name} (White)`;
 
-            // Bottom label ('user-lbl' position) always matches the Red pieces at the bottom
-            document.getElementById('user-lbl').innerText = `${myColor === 'R' ? 'You' : 'Opponent'}: ${data.r_name} (Red)`;
-                
+                // Bottom label ('user-lbl' position) always matches the Red pieces at the bottom
+                document.getElementById('user-lbl').innerText = `${myColor === 'R' ? 'You' : 'Opponent'}: ${data.r_name} (Red)`;
+
+                // ADD THESE 4 LINES:
+                if (data.event_id && data.event_id > lastSeenEventId) {
+                    lastSeenEventId = data.event_id;
+                    showEventToast(data.last_event);
+                }
+
                 if (data.winner) {
                     showAlert("Game Over!", `${data.winner} Wins the Match!`);
                     clearInterval(pollingInterval);
