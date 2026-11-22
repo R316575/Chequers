@@ -18,6 +18,8 @@ class Board:
         self.w_score = 0
         self.r_score = 0
         self.current_turn = "R"
+        self.last_event = None
+        self.event_id = 0  
         self.initialise_board()
 
     def initialise_board(self):
@@ -73,6 +75,9 @@ class Board:
         if piece == "r" and dr >= 0: return False, "Normal Red pieces can only move forwards."
         if piece == "w" and dr <= 0: return False, "Normal White pieces can only move forwards."
 
+        player_name = "Red" if player == "R" else "White"
+        event_msg = None
+
         if is_step:
             self.board[nr][nc] = piece
             self.board[r][c] = " "
@@ -87,11 +92,20 @@ class Board:
             self.board[mid_r][mid_c] = " "
             if player == "R": self.r_score += 1
             else: self.w_score += 1
+            event_msg = f"⚔️ {player_name} captured a piece!"
         else:
             return False, "Pieces can only move diagonally 1 or 2 squares."
 
-        if player == "R" and nr == 0: self.board[nr][nc] = "R"
-        if player == "W" and nr == 7: self.board[nr][nc] = "W"
+        if player == "R" and nr == 0 and piece == "r":
+            self.board[nr][nc] = "R"
+            event_msg = "👑 Red piece promoted to King!"
+        elif player == "W" and nr == 7 and piece == "w":
+            self.board[nr][nc] = "W"
+            event_msg = "👑 White piece promoted to King!"
+
+        if event_msg:
+            self.event_id += 1
+            self.last_event = event_msg
 
         self.switch_turn()
         return True, "Success"
