@@ -40,6 +40,16 @@ body {
 .red-p { background-color: #b01b1b; border: 2px solid #540606; color: white; }
 .white-p { background-color: #ffffff; border: 2px solid #a8a8a8; color: black; }
 
+/* --- KING CROWN STYLING --- */
+.king-crown {
+    color: #ffd700;
+    font-size: 32px;
+    line-height: 1;
+    /* Subtle dark outline so gold stands out clearly on the white pieces */
+    text-shadow: -1px -1px 0 #4a3c31, 1px -1px 0 #4a3c31, -1px 1px 0 #4a3c31, 1px 1px 0 #4a3c31;
+    user-select: none;
+}
+
 /* --- SELECTION & GLOW EFFECT TILES --- */
 .selected-piece { box-shadow: 0 0 15px 5px #ffd700 !important; }
 .hint-highlight::after {
