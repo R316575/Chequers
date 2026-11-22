@@ -277,3 +277,23 @@ textEl.innerText = text;
 overlay.classList.remove('hidden');
 }
 }
+
+
+// Non-blocking pop-up banner for captures and king promotions
+function showEventToast(message) {
+    let toast = document.getElementById('event-toast');
+    if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'event-toast';
+        toast.className = 'event-toast';
+        document.body.appendChild(toast);
+    }
+    toast.innerText = message;
+    toast.classList.remove('hidden');
+
+    // Automatically hide after 2.5 seconds
+    clearTimeout(toast.hideTimer);
+    toast.hideTimer = setTimeout(() => {
+        toast.classList.add('hidden');
+    }, 2500);
+}
