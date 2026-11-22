@@ -116,6 +116,93 @@ body {
     transition: background-color 0.2s ease, transform 0.1s ease;
 }
 
+
+/* --- HOW TO PLAY BUTTON & RULES MODAL --- */
+.rules-btn {
+    position: fixed;
+    bottom: 74px;
+    right: 24px;
+    padding: 10px 18px;
+    background-color: #2b593f;
+    color: #fffcf2;
+    border: 2px solid #1b3a29;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.25);
+    z-index: 50;
+    transition: background-color 0.2s ease, transform 0.1s ease;
+}
+
+.rules-btn:hover {
+    background-color: #1f422f;
+    transform: translateY(-1px);
+}
+
+.rules-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 300;
+}
+
+.rules-overlay.hidden {
+    display: none;
+}
+
+.rules-box {
+    background-color: #fffcf2;
+    border: 3px solid #2b593f;
+    border-radius: 10px;
+    padding: 24px 28px;
+    max-width: 440px;
+    width: 90%;
+    color: #2c241d;
+    text-align: left;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+.rules-box h2 {
+    margin-top: 0;
+    color: #2b593f;
+    text-align: center;
+    border-bottom: 2px solid #d4af37;
+    padding-bottom: 8px;
+}
+
+.rules-box ul {
+    padding-left: 20px;
+    line-height: 1.6;
+    font-size: 15px;
+}
+
+.rules-box li {
+    margin-bottom: 8px;
+}
+
+.rules-close-btn {
+    display: block;
+    margin: 18px auto 0;
+    padding: 8px 24px;
+    background-color: #2b593f;
+    color: #fffcf2;
+    border: none;
+    border-radius: 6px;
+    font-size: 15px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.rules-close-btn:hover {
+    background-color: #1f422f;
+}
 .quit-btn:hover {
     background-color: #8a1313;
     transform: translateY(-1px);
