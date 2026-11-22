@@ -231,3 +231,48 @@ body {
 .disconnect-banner.hidden {
     display: none;
 }
+
+
+/* --- TURN CLOCK & EXTRA TIME BUTTON --- */
+.turn-timer-wrap {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    margin-left: 10px;
+}
+
+.turn-clock {
+    font-weight: bold;
+    color: #2b593f;
+    background-color: #f3efe0;
+    border: 1.5px solid #2b593f;
+    padding: 3px 10px;
+    border-radius: 6px;
+    font-size: 14px;
+}
+
+.turn-clock.low-time {
+    color: #b01b1b;
+    border-color: #b01b1b;
+    background-color: #fde8e8;
+}
+
+.extend-time-btn {
+    padding: 4px 12px;
+    background-color: #d4af37;
+    color: #2c241d;
+    border: 1.5px solid #4a3c31;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+.extend-time-btn:hover {
+    background-color: #e5c148;
+}
+
+.extend-time-btn.hidden {
+    display: none;
+}
