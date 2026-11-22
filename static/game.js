@@ -425,52 +425,9 @@ function updateSelfOfflineBanner(isOffline) {
         document.body.appendChild(banner);
     }
 
-
-    // Turn countdown clock & "+30s Extra Time" button when <= 15s left on your turn
-function updateTurnTimerUI(currentTurn, secondsLeft, extraTimeMap) {
-    const turnEl = document.getElementById('turn-indicator');
-    if (!turnEl || secondsLeft === null || secondsLeft === undefined) return;
-
-    let wrap = document.getElementById('turn-timer-wrap');
-    if (!wrap) {
-        wrap = document.createElement('span');
-        wrap.id = 'turn-timer-wrap';
-        wrap.className = 'turn-timer-wrap';
-        wrap.innerHTML = `
-            <span id="turn-clock" class="turn-clock">⏱ 45s</span>
-            <button id="btn-extend-time" class="extend-time-btn hidden">+30s Extra Time</button>
-        `;
-        turnEl.insertAdjacentElement('afterend', wrap);
-
-        document.getElementById('btn-extend-time').addEventListener('click', () => {
-            if (!roomCode || !myColor) return;
-            fetch('/api/extend_time', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ room_code: roomCode, color: myColor })
-            })
-            .then(r => r.json())
-            .then(res => {
-                if (res.error) showAlert("Extra Time", res.error);
-            });
-        });
-    }
-
-    const clockEl = document.getElementById('turn-clock');
-    const extendBtn = document.getElementById('btn-extend-time');
-
-    clockEl.innerText = `⏱ ${secondsLeft}s`;
-    clockEl.classList.toggle('low-time', secondsLeft <= 15);
-
-    const isMyTurn = (currentTurn === myColor);
-    const hasExtension = extraTimeMap && (extraTimeMap[myColor] > 0);
-    if (isMyTurn && secondsLeft <= 15 && secondsLeft > 0 && hasExtension) {
-        extendBtn.classList.remove('hidden');
-    } else {
-        extendBtn.classList.add('hidden');
-    }
+    banner.innerText = "⚠️ Your connection dropped. Attempting to reconnect...";
+    banner.classList.remove('hidden');
 }
-
 
 // Turn countdown clock & "+30s Extra Time" button when <= 15s left on your turn
 function updateTurnTimerUI(currentTurn, secondsLeft, extraTimeMap) {
