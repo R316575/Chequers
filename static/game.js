@@ -35,8 +35,11 @@ function startGameStatePolling() {
                 document.getElementById('lobby-modal').classList.add('hidden');
                 document.getElementById('game-container').classList.remove('hidden');
                 
-                document.getElementById('user-lbl').innerText = `You: ${myColor === 'R' ? data.r_name : data.w_name} (${myColor === 'R' ? 'Red' : 'White'})`;
-                document.getElementById('opponent-lbl').innerText = `Opponent: ${myColor === 'R' ? data.w_name : data.r_name} (${myColor === 'R' ? 'White' : 'Red'})`;
+            // Top label ('opponent-lbl' position) always matches the White pieces at the top
+            document.getElementById('opponent-lbl').innerText = `${myColor === 'W' ? 'You' : 'Opponent'}: ${data.w_name} (White)`;
+
+            // Bottom label ('user-lbl' position) always matches the Red pieces at the bottom
+            document.getElementById('user-lbl').innerText = `${myColor === 'R' ? 'You' : 'Opponent'}: ${data.r_name} (Red)`;
                 
                 if (data.winner) {
                     showAlert("Game Over!", `${data.winner} Wins the Match!`);
