@@ -24,7 +24,11 @@ class Board:
         self.disconnect_start = None
         self.disconnected_player = None
         self.timeout_result = None
-        self.event_id = 0  
+        self.event_id = 0
+        self.turn_start_time = None
+        self.turn_duration = 45
+        self.extra_time_left = {"R": 1, "W": 1}
+        self.afk_winner = None
         self.initialise_board()
 
     def initialise_board(self):
@@ -39,6 +43,8 @@ class Board:
 
     def switch_turn(self):
         self.current_turn = "W" if self.current_turn == "R" else "R"
+        self.turn_start_time = time.time()
+        self.turn_duration = 45
 
     def check_forced_capture(self, player):
         for row in range(8):
@@ -178,6 +184,29 @@ def api_join_room():
         return jsonify({'success': True, 'room_code': room, 'color': 'W'})
     return jsonify({'success': False, 'error': 'Invalid Room Code.'}), 400
 
+
+@app.route('/api/extend_time', methods=['POST'])
+def api_extend_time():
+    data = request.get_json() or {}
+    room = data.get('room_code', '').upper()
+    color = data.get('color', '').upper()
+
+    if room not in ACTIVE_GAMES:
+        return jsonify({'error': 'Room not found'}), 404
+
+    board_obj = ACTIVE_GAMES[room]['board']
+    if board_obj.current_turn != color:
+        return jsonify({'error': 'Not your turn'}), 400
+    if board_obj.extra_time_left.get(color, 0) <= 0:
+        return jsonify({'error': 'No extra time remaining'}), 400
+
+    board_obj.extra_time_left[color] -= 1
+    board_obj.turn_duration += 30
+    player_name = "Red" if color == "R" else "White"
+    board_obj.event_id += 1
+    board_obj.last_event = f"⏳ {player_name} requested +30s extra time!"
+    return jsonify({'success': True})
+
 @app.route('/api/get_game_state', methods=['GET'])
 def api_get_game_state():
     room = request.args.get('room_code', '').upper()
@@ -202,7 +231,7 @@ def api_get_game_state():
         disconnect_remaining = None
         disconnected_name = None
 
-        if game_info['started'] and not board_obj.forfeit_winner and not board_obj.timeout_result:
+        if game_info['started'] and not any([board_obj.forfeit_winner, board_obj.timeout_result, board_obj.afk_winner]):
             opponent = "W" if caller_color == "R" else ("R" if caller_color == "W" else None)
             if opponent and (now - board_obj.last_seen[opponent] > 5.0):
                 if board_obj.disconnect_start is None:
@@ -215,9 +244,23 @@ def api_get_game_state():
 
                 if disconnect_remaining == 0:
                     board_obj.timeout_result = board_obj.calculate_disconnect_winner()
+
+        # 3. AFK Turn Timer check (paused while an opponent is actively disconnected)
+        turn_remaining = None
+        if game_info['started'] and not any([board_obj.forfeit_winner, board_obj.timeout_result, board_obj.afk_winner]):
+            if board_obj.turn_start_time is None:
+                board_obj.turn_start_time = now
+
+            if board_obj.disconnect_start is None:
+                elapsed_turn = now - board_obj.turn_start_time
+                turn_remaining = max(0, int(board_obj.turn_duration - elapsed_turn))
+                if turn_remaining == 0:
+                    other = "White" if board_obj.current_turn == "R" else "Red"
+                    board_obj.afk_winner = f"{other} (Opponent Timed Out / AFK)"
         
         winner = None
         if board_obj.forfeit_winner: winner = board_obj.forfeit_winner
+        elif board_obj.afk_winner: winner = board_obj.afk_winner
         elif board_obj.timeout_result: winner = board_obj.timeout_result
         elif board_obj.r_score == 12 or board_obj.check_no_moves("W"): winner = "Red"
         elif board_obj.w_score == 12 or board_obj.check_no_moves("R"): winner = "White"
@@ -235,7 +278,9 @@ def api_get_game_state():
             'last_event': board_obj.last_event,
             'event_id': board_obj.event_id,
             'disconnected_name': disconnected_name,
-            'disconnect_remaining': disconnect_remaining
+            'disconnect_remaining': disconnect_remaining,
+            'turn_remaining': turn_remaining,
+            'extra_time_left': board_obj.extra_time_left
         })
     return jsonify({'error': 'Invalid Room Code'}), 404
 
