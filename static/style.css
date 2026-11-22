@@ -88,11 +88,12 @@ body {
 
 /* --- ACTIVE TURN PLAYER HIGHLIGHT --- */
 .active-turn {
-    background-color: #ffd700;
-    color: #2b593f;
-    font-weight: bold;
-    padding: 4px 12px;
-    border-radius: 6px;
-    border: 2px solid #4a3c31;
-    box-shadow: 0 0 8px rgba(255, 215, 0, 0.7);
+    background-color: #ffd700 !important;
+    color: #2b593f !important;
+    font-weight: bold !important;
+    padding: 4px 12px !important;
+    border-radius: 6px !important;
+    border: 2px solid #4a3c31 !important;
+    box-shadow: 0 0 8px rgba(255, 215, 0, 0.7) !important;
+    display: inline-block !important;
 }
