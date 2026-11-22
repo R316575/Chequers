@@ -31,10 +31,13 @@ function startGameStatePolling() {
             const codeHeader = document.getElementById('display-code');
             if (codeHeader) { codeHeader.innerText = roomCode; }
 
-            if (data.started) {
-                document.getElementById('alert-overlay').classList.add('hidden');
-                document.getElementById('lobby-modal').classList.add('hidden');
-                document.getElementById('game-container').classList.remove('hidden');
+             if (data.started) {
+                const lobby = document.getElementById('lobby-modal');
+                if (lobby && !lobby.classList.contains('hidden')) {
+                    document.getElementById('alert-overlay').classList.add('hidden');
+                    lobby.classList.add('hidden');
+                    document.getElementById('game-container').classList.remove('hidden');
+                }
                 
             // Top label ('opponent-lbl' position) always matches the White pieces at the top
             document.getElementById('opponent-lbl').innerText = `${myColor === 'W' ? 'You' : 'Opponent'}: ${data.w_name} (White)`;
