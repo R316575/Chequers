@@ -112,11 +112,11 @@ function renderBoard(board) {
             tile.dataset.row = r;
             tile.dataset.col = c;
 
-            const val = board[r] ? board[r][c] : " ";
+        const val = board[r] ? board[r][c] : " ";
             if (val && val !== " ") {
                 const p = document.createElement('div');
                 p.className = `piece ${val.toUpperCase() === 'R' ? 'red-p' : 'white-p'}`;
-                if (val === "R" || val === "W") p.innerHTML = "&#x2654;";
+                if (val === "R" || val === "W") p.innerHTML = '<span class="king-crown">&#x2654;</span>';
                 
                 if (selectedTile && selectedTile.r === r && selectedTile.c === c) {
                     p.classList.add('selected-piece');
